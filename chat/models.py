@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User, BaseUserManager, AbstractBaseUser, PermissionsMixin
+import uuid 
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, full_name, password=None):
@@ -22,17 +23,14 @@ class CustomUserManager(BaseUserManager):
         return user
 
 
-# -----------------------
-# Custom User Model
-# -----------------------
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
-    # email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
-    # is_delete()
+    is_delete = models.BooleanField(default=False) # flag for soft delete the customuser 
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = [ 'full_name']
@@ -46,20 +44,35 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.username
 
 class ChatRoom(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    room_id = models.CharField(max_length=255, unique=True, editable=False)
+    name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+    users = models.ManyToManyField(CustomUser, related_name="chat_rooms")\
+        
+    is_delete = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    
     def __str__(self):
         return self.name
     
-# make a many to many relatioonship for chatroom and user 
+    
+    def save(self, *args, **kwargs): #generate the unique room_id while creating the room 
+        if not self.room_id:
+            self.room_id = str(uuid.uuid4())
+        super().save(*args, **kwargs)
+        
+    
 
 class Message(models.Model):
-    # user - > foreigh key 
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # Use AnonymousUser if no login system
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    # flag -> is_file
+    
+    is_file = models.BooleanField(default=False)
+    is_delete = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    
     class Meta :
         ordering = ['timestamp']
 
