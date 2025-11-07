@@ -32,6 +32,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
+    # is_delete()
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = [ 'full_name']
@@ -49,14 +50,16 @@ class ChatRoom(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return self.name
-
-
+    
+# make a many to many relatioonship for chatroom and user 
 
 class Message(models.Model):
+    # user - > foreigh key 
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # Use AnonymousUser if no login system
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
+    # flag -> is_file
     class Meta :
         ordering = ['timestamp']
 
