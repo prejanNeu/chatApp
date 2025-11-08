@@ -10,7 +10,7 @@
     <input id="chat-message-submit" type="button" value="Send">
     {{ room_name|json_script:"room-name" }}
     <script>
-        const user = "{{request.user.full_name}}";
+        const user_id = "{{request.user.id}}";
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
         const chatSocket = new WebSocket(
@@ -23,9 +23,9 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            console.log(data);
+            // TODO: I'm removing Anonymous User for now!
             document.querySelector('#chat-log').value += (
-                (data.user ? data.user : 'Anonymous User') + ': ' + data.message + '\n'
+                (data.user.username) + ': ' + data.message + '\n'
             );
         };
         chatSocket.onclose = function(e) {
@@ -43,7 +43,7 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
-                'user':user,
+                'user':user_id, // id
                 'message': message,
             }));
             messageInputDom.value = '';

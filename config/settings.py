@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'daphne',
     'chat',
+    'accounts',
     'channels',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -83,7 +84,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -111,13 +111,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-AUTH_USER_MODEL = 'chat.Customuser'
+AUTH_USER_MODEL = 'accounts.Customuser'
 
 USE_TZ = True
 STATIC_URL = 'static/'
