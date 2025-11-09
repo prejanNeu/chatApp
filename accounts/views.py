@@ -37,13 +37,13 @@ def register(request):
                 request, "Registration successful! Please log in.")
             return redirect("login")
 
-        except IntegrityError:
+        except IntegrityError as e :
             messages.error(request, "Username or email already exists.")
             messages.error(request, f"{email} already exits?")
+            print(e)
             return redirect("register")
 
         except Exception as e:
-            logger.error(f"Registration error: {e}")
             messages.error(
                 request, "An error occurred during registration. Please try again.")
             return redirect("register")
