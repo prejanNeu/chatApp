@@ -48,7 +48,7 @@ def register(request):
                 request, "An error occurred during registration. Please try again.")
             return redirect("register")
 
-    return render(request, "chat/register.html")
+    return render(request, "accounts/register.html")
 
 
 def login(request):
@@ -74,7 +74,7 @@ def login(request):
             messages.error(request, "Invalid username or password.")
             return redirect("login")
 
-    return render(request, "chat/login.html")
+    return render(request, "accounts/login.html")
 
 
 @login_required
