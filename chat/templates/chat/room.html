@@ -5,7 +5,7 @@
     <title>Chat Room</title>
 </head>
 <body>
-    <div id="chat-log"></div>
+    <ul id="chat-log"></ul>
 
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
@@ -32,11 +32,11 @@
 
             if (data.user.id === my_id) {
                 // Message sent by me
-                const message = `<span style="color: red;">${data.user.username}: ${data.message}</span><br>`;
+                const message = `<li style="color: red;">${data.user.username}: ${data.message}</li>`;
                 chatLog.innerHTML += message;
             } else {
                 // Message from someone else
-                const message = `<span>${data.user.username}: ${data.message}</span><br>`;
+                const message = `<li>${data.user.username}: ${data.message}</li>`;
                 chatLog.innerHTML += message;
             }
         };
