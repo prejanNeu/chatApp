@@ -4,8 +4,10 @@ import uuid
 
 
 class ChatRoom(models.Model):
-    room_id = models.CharField(
-        max_length=255, unique=True, editable=False)
+    room_id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False)
     name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     users = models.ManyToManyField(CustomUser, related_name="chat_rooms")
@@ -15,11 +17,6 @@ class ChatRoom(models.Model):
 
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):  # generate the unique room_id while creating the room
-        if not self.room_id:
-            self.room_id = str(uuid.uuid4())
-        super().save(*args, **kwargs)
 
 
 class Message(models.Model):
