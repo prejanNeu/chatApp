@@ -6,12 +6,12 @@
 </head>
 <body>
     <ul id="chat-log">
+      {% load tz %}
       {% for msg in messages %}
-        <li>
 
-          <strong>{{ msg.user.username }}</strong> ({{ msg.timestamp|date:"H:i" }}):
+        <li data-time="{{ msg.timestamp|date:'c' }}">
+          <strong>{{ msg.user.username }}</strong>:
           {{ msg.content }}
-
         </li>
       {% endfor %}
     </ul>
@@ -20,6 +20,15 @@
     <input id="chat-message-submit" type="button" value="Send">
     {{ room_name|json_script:"room-name" }}
     <script>
+
+      // convert utc to local time
+        document.querySelectorAll('[data-time]').forEach(li => {
+          const date = new Date(li.dataset.time);
+          const localTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          li.insertAdjacentText('afterbegin', `(${localTime}) `);
+        });
+
+
         const user_id = "{{request.user.id}}";
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
