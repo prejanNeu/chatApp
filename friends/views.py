@@ -1,0 +1,77 @@
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import CustomUser, FriendRequest
+
+
+@login_required
+def friend_list(request):
+    user = request.user
+    friends_from = FriendRequest.objects.filter(
+        from_user=user, is_accepted=True).values_list('to_user', flat=True)
+    friends_to = FriendRequest.objects.filter(
+        to_user=user, is_accepted=True).values_list('from_user', flat=True)
+    friends = CustomUser.objects.filter(
+        id__in=list(friends_from) + list(friends_to))
+
+    return render(request, "friends/friends.html", {"friends": friends})
+
+
+@login_required
+def friend_requests(request):
+    incoming = FriendRequest.objects.filter(
+        from_user=request.user, is_accepted=False)
+    outgoing = FriendRequest.objects.filter(
+        to_user=request.user, is_accepted=False)
+
+    return render(request, "friends/friend_requests.html", {
+        "incoming": incoming,
+        "outgoing": outgoing,
+    })
+
+
+@login_required
+def send_friend_request(request, user_id):
+    to_user = CustomUser.objects.get(id=user_id)
+    if to_user == request.user:
+        messages.error(
+            request, "You cannot send a friend request to yourself.")
+        return redirect("friend_list")
+
+    friend_request, created = FriendRequest.objects.get_or_create(
+        from_user=request.user,
+        to_user=to_user
+    )
+
+    if not created:
+        messages.info(request, "Friend Request is already sent.")
+    else:
+        messages.success(
+            request, f"Friend Request Sent: {friend_request}")
+    redirect("friend_list")
+
+
+@login_required
+def accept_friend_request(request, request_id):
+    friend_request = FriendRequest.objects.get(
+        id=request_id, to_user=request.user)
+    friend_request.accepted = True
+    friend_request.save()
+    messages.success(
+        request, f"You are now friends with {friend_request.from_user.full_name}!")
+    return redirect("friend_request")
+
+
+@login_required
+def reject_friend_request(request, request_id):
+    friend_request = FriendRequest.objects.get(
+        id=request_id, to_user=request.user)
+    friend_request.delete()
+    messages.info(
+        request, f"You rejected {friend_request.from_user.full_name}'s friend request!")
+    return redirect("friend_request")
+
+
+@login_required
+def search_users(request):
+    ...

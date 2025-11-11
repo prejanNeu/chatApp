@@ -6,7 +6,6 @@
 </head>
 <body>
     <ul id="chat-log">
-      {% load tz %}
       {% for msg in messages %}
 
         <li data-time="{{ msg.timestamp|date:'c' }}">

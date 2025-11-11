@@ -1,0 +1,8 @@
+<h2>Your Friends</h2>
+<ul>
+  {% for friend in friends %}
+    <li>{{ friend.full_name }}</li>
+  {% empty %}
+    <li>You have no friends yet 😢</li>
+  {% endfor %}
+</ul>
