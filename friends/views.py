@@ -20,9 +20,9 @@ def friend_list(request):
 @login_required
 def friend_requests(request):
     incoming = FriendRequest.objects.filter(
-        from_user=request.user, is_accepted=False)
-    outgoing = FriendRequest.objects.filter(
         to_user=request.user, is_accepted=False)
+    outgoing = FriendRequest.objects.filter(
+        from_user=request.user, is_accepted=False)
 
     return render(request, "friends/friend_requests.html", {
         "incoming": incoming,
@@ -36,7 +36,7 @@ def send_friend_request(request, user_id):
     if to_user == request.user:
         messages.error(
             request, "You cannot send a friend request to yourself.")
-        return redirect("friend_list")
+        return redirect("friends:friend_list")
 
     friend_request, created = FriendRequest.objects.get_or_create(
         from_user=request.user,
@@ -48,18 +48,18 @@ def send_friend_request(request, user_id):
     else:
         messages.success(
             request, f"Friend Request Sent: {friend_request}")
-    redirect("friend_list")
+    return redirect("friends:friend_list")
 
 
 @login_required
 def accept_friend_request(request, request_id):
     friend_request = FriendRequest.objects.get(
         id=request_id, to_user=request.user)
-    friend_request.accepted = True
+    friend_request.is_accepted = True
     friend_request.save()
     messages.success(
         request, f"You are now friends with {friend_request.from_user.full_name}!")
-    return redirect("friend_request")
+    return redirect("friends:friend_requests")
 
 
 @login_required
@@ -69,7 +69,7 @@ def reject_friend_request(request, request_id):
     friend_request.delete()
     messages.info(
         request, f"You rejected {friend_request.from_user.full_name}'s friend request!")
-    return redirect("friend_request")
+    return redirect("friends:friend_requests")
 
 
 @login_required

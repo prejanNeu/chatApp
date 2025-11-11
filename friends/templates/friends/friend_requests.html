@@ -1,6 +1,6 @@
 <h2>Friend Requests</h2>
 <ul>
-  {% for req in requests %}
+  {% for req in incoming %}
     <li>
       {{ req.from_user.username }}
       <a href="{% url 'friends:accept_friend_request' req.id %}">✅ Accept</a>
