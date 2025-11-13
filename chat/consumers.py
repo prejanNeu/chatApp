@@ -2,7 +2,8 @@ import json
 
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from .models import ChatRoom, Message
+from django.utils import timezone
+from .models import ChatRoom, Message, MessageReadStatus
 from accounts.models import CustomUser
 from .utils import serialize_user
 
@@ -17,6 +18,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+        room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
+
+        await mark_messages_as_read(self.scope['user'], room)
 
         await self.accept()
 
@@ -39,12 +43,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
         user = await sync_to_async(CustomUser.objects.get)(pk=user_id)
         room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
 
-        # TODO: Save the message into DB associtated with the room and the user
         msg = await sync_to_async(Message.objects.create)(
             user=user,
             room=room,
             content=message
         )
+
+        room_users = await sync_to_async(lambda: list(room.users.exclude(id=user.id)))()
+        for u in room_users:
+            await sync_to_async(MessageReadStatus.objects.create)(
+                user=u, message=message, is_read=False
+            )
+            await sync_to_async(Notification.objects.create)(
+                user=u,
+                type='MESSAGE',
+                message=f"New message from {message.user.username}",
+                link=f"/chat/{message.room.room_id}/",
+            )
 
         # Send message to room group
         await self.channel_layer.group_send(
@@ -66,3 +81,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "user": event['user'],
             "timestamp": event['timestamp'],
         }))
+
+
+@sync_to_async
+def mark_messages_as_read(user, room):
+    MessageReadStatus.objects.filter(
+        user=user, message__room=room, is_read=False
+    ).update(is_read=True, read_at=timezone.now())

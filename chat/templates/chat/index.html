@@ -5,9 +5,26 @@
     <title>Chat Rooms</title>
 </head>
 <body>
-    What chat room would you like to enter?<br>
-    <input id="room-name-input" type="text" size="100"><br>
-    <input id="room-name-submit" type="button" value="Enter">
+<h2>Your Chats</h2>
+    <ul>
+        {% for entry in rooms %}
+            <li>
+                <a href="{% url 'room' entry.room.name %}">
+                  {{ entry.room.name }}
+                </a>
+                {% if entry.last_message %}
+                    <span>- {{ entry.last_message.content|truncatechars:30 }}</span>
+                {% endif %}
+                {% if entry.unread_count > 0 %}
+                    <span style="background: red; color: white; border-radius: 50%; padding: 2px 8px;">
+                    {{ entry.unread_count }}
+                    </span>
+                {% endif %}
+            </li>
+          {% empty %}
+            <li>No active chats.</li>
+          {% endfor %}
+    </ul>
 
     <script>
         document.querySelector('#room-name-input').focus();

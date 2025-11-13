@@ -36,3 +36,33 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.user.username}: {self.content[:20]}"
+
+
+class MessageReadStatus(models.Model):
+    user = models.ForeignKey(to=CustomUser, on_delete=models.CASCADE)
+    message = models.ForeignKey(to=Message, on_delete=models.CASCADE)
+    is_read = models.BooleanField(default=False)
+
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("user", "message")
+
+
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('MESSAGE', 'Message'),
+        ('FRIEND_REQUEST', 'Friend Request'),
+        ('SYSTEM', 'System'),
+    ]
+
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name='notifications')
+    type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    message = models.TextField(blank=True)
+    link = models.URLField(blank=True)  # e.g., redirect to chat room
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
