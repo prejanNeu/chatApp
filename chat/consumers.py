@@ -1,3 +1,6 @@
+from channels.db import database_sync_to_async
+from django.db import models
+from channels.layers import get_channel_layer
 import json
 
 from asgiref.sync import sync_to_async
@@ -20,7 +23,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
 
-        await mark_messages_as_read(self.scope['user'], room)
+        # await mark_messages_as_read(self.scope['user'], room)
+        await mark_messages_as_read_and_notify(self.scope['user'], room)
 
         await self.accept()
 
@@ -43,22 +47,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
         user = await sync_to_async(CustomUser.objects.get)(pk=user_id)
         room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
 
+        # Save the message
         msg = await sync_to_async(Message.objects.create)(
             user=user,
             room=room,
             content=message
         )
 
+        # Mark the message as unread by other users in the group
         room_users = await sync_to_async(lambda: list(room.users.exclude(id=user.id)))()
         for u in room_users:
             await sync_to_async(MessageReadStatus.objects.create)(
-                user=u, message=message, is_read=False
+                user=u, message=msg, is_read=False
             )
-            await sync_to_async(Notification.objects.create)(
-                user=u,
-                type='MESSAGE',
-                message=f"New message from {message.user.username}",
-                link=f"/chat/{message.room.room_id}/",
+
+            # Broadcast Message Notification
+            await self.channel_layer.group_send(
+                f"notification_{u.id}",
+                {
+
+                    "type": "notify",
+                    "data": {
+                        "event": "new_message",
+                        "from": msg.user.username,
+                        "room_id": str(msg.room.room_id),
+                        "room_name": msg.room.name,
+                        "content": msg.content
+                    }
+
+                }
             )
 
         # Send message to room group
@@ -82,9 +99,38 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "timestamp": event['timestamp'],
         }))
 
+#
+# @sync_to_async
+# def mark_messages_as_read(user, room):
+#     MessageReadStatus.objects.filter(
+#         user=user, message__room=room, is_read=False
+#     ).update(is_read=True, read_at=timezone.now())
 
-@sync_to_async
-def mark_messages_as_read(user, room):
+
+@database_sync_to_async
+def mark_messages_as_read_and_notify(user, room):
     MessageReadStatus.objects.filter(
         user=user, message__room=room, is_read=False
-    ).update(is_read=True, read_at=timezone.now())
+    ).update(is_read=True)
+
+    unread_counts = (
+        MessageReadStatus.objects.filter(user=user, is_read=False)
+        .values('message__room')
+        .annotate(count=models.Count('id'))
+    )
+
+    total_unread = sum([u['count'] for u in unread_counts])
+
+    channel_layer = get_channel_layer()
+    channel_layer.group_send(
+        f"notifications_{user.id}",
+        {
+            "type": "notify",
+            "data": {
+                "event": "unread_update",
+                "room_id": str(room.room_id),
+                "unread_count": 0,
+                "total_unread": total_unread,
+            },
+        }
+    )

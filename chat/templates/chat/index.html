@@ -8,18 +8,18 @@
 <h2>Your Chats</h2>
     <ul>
         {% for entry in rooms %}
-            <li>
+            <li data-room="{{ entry.room.room_id }}">
                 <a href="{% url 'room' entry.room.name %}">
                   {{ entry.room.name }}
                 </a>
+
                 {% if entry.last_message %}
-                    <span>- {{ entry.last_message.content|truncatechars:30 }}</span>
+                    <span class="last-message">- {{ entry.last_message.content|truncatechars:30 }}</span>
                 {% endif %}
-                {% if entry.unread_count > 0 %}
-                    <span style="background: red; color: white; border-radius: 50%; padding: 2px 8px;">
+
+                <span class="unread-badge" style="background: red; color: white; border-radius: 50%; padding: 2px 8px;" >
                     {{ entry.unread_count }}
                     </span>
-                {% endif %}
             </li>
           {% empty %}
             <li>No active chats.</li>
@@ -27,17 +27,38 @@
     </ul>
 
     <script>
-        document.querySelector('#room-name-input').focus();
-        document.querySelector('#room-name-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
-                document.querySelector('#room-name-submit').click();
-            }
-        };
 
-        document.querySelector('#room-name-submit').onclick = function(e) {
-            var roomName = document.querySelector('#room-name-input').value;
-            window.location.pathname = '/chat/' + roomName + '/';
-        };
+        // hide badge when there's no message
+        document.querySelectorAll(".unread-badge").forEach(badge => {
+          if (parseInt(badge.innerText) === 0) {
+            badge.style.display="none"
+          }
+        })
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const socket = new WebSocket(
+                'ws://' + window.location.host + '/ws/notifications/'
+            );
+
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if (data.type === 'notify' && data.data.event === 'new_message') {
+                    // Play sound / show toast
+                    console.log("New message:", data.data);
+
+                    // Example: update unread badge dynamically
+                    const roomId = data.data.room_id;
+                    const badge = document.querySelector(`[data-room="${roomId}"] .unread-badge`);
+                    const last_message = document.querySelector(`[data-room="${roomId}"] .last-message`)
+                    if (badge) {
+                        let count = parseInt(badge.innerText) || 0;
+                        badge.innerText = count + 1;
+                        badge.style.display = "inline";
+                    }
+                  last_message.innerText = `- ${data.data.content}`
+                }
+            };
+        });
     </script>
 </body>
 </html>
