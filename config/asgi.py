@@ -1,4 +1,4 @@
-import friends.routing
+import notifications.routing
 import chat.routing
 import os
 
@@ -19,7 +19,7 @@ application = ProtocolTypeRouter(
         "websocket": AllowedHostsOriginValidator(
             AuthMiddlewareStack(URLRouter(
                 chat.routing.websocket_urlpatterns +
-                friends.routing.websocket_urlpatterns
+                notifications.routing.websocket_urlpatterns
             ))
         ),
     }

@@ -123,7 +123,7 @@ def mark_messages_as_read_and_notify(user, room):
 
     channel_layer = get_channel_layer()
     channel_layer.group_send(
-        f"notifications_{user.id}",
+        f"notification_{user.id}",
         {
             "type": "notify",
             "data": {

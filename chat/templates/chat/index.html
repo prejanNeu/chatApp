@@ -36,11 +36,11 @@
         })
 
         document.addEventListener("DOMContentLoaded", function() {
-            const socket = new WebSocket(
+            const notificationSocket = new WebSocket(
                 'ws://' + window.location.host + '/ws/notifications/'
             );
 
-            socket.onmessage = function(e) {
+            notificationSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
                 if (data.type === 'notify' && data.data.event === 'new_message') {
                     // Play sound / show toast
