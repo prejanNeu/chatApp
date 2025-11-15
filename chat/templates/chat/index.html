@@ -1,64 +1,77 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <meta charset="utf-8"/>
+  <head>
+    <meta charset="utf-8" />
     <title>Chat Rooms</title>
-</head>
-<body>
-<h2>Your Chats</h2>
+  </head>
+  <body>
+    <h2>Your Chats</h2>
     <ul>
-        {% for entry in rooms %}
-            <li data-room="{{ entry.room.room_id }}">
-                <a href="{% url 'room' entry.room.name %}">
-                  {{ entry.room.name }}
-                </a>
+      {% for entry in rooms %}
+      <li data-room="{{ entry.room.room_id }}">
+        <a href="{% url 'chat:room' entry.room.name %}">
+          {{ entry.room.name }}
+        </a>
 
-                {% if entry.last_message %}
-                    <span class="last-message">- {{ entry.last_message.content|truncatechars:30 }}</span>
-                {% endif %}
+        {% if entry.last_message %}
+        <span class="last-message"
+          >- {{ entry.last_message.content|truncatechars:30 }}</span
+        >
+        {% endif %}
 
-                <span class="unread-badge" style="background: red; color: white; border-radius: 50%; padding: 2px 8px;" >
-                    {{ entry.unread_count }}
-                    </span>
-            </li>
-          {% empty %}
-            <li>No active chats.</li>
-          {% endfor %}
+        <span
+          class="unread-badge"
+          style="
+            background: red;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+          "
+        >
+          {{ entry.unread_count }}
+        </span>
+      </li>
+      {% empty %}
+      <li>No active chats.</li>
+      {% endfor %}
     </ul>
 
     <script>
+      // hide badge when there's no message
+      document.querySelectorAll(".unread-badge").forEach((badge) => {
+        if (parseInt(badge.innerText) === 0) {
+          badge.style.display = "none";
+        }
+      });
 
-        // hide badge when there's no message
-        document.querySelectorAll(".unread-badge").forEach(badge => {
-          if (parseInt(badge.innerText) === 0) {
-            badge.style.display="none"
-          }
-        })
+      document.addEventListener("DOMContentLoaded", function () {
+        const notificationSocket = new WebSocket(
+          "ws://" + window.location.host + "/ws/notifications/",
+        );
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const notificationSocket = new WebSocket(
-                'ws://' + window.location.host + '/ws/notifications/'
+        notificationSocket.onmessage = function (e) {
+          const data = JSON.parse(e.data);
+          if (data.type === "notify" && data.data.event === "new_message") {
+            // Play sound / show toast
+            console.log("New message:", data.data);
+
+            // Example: update unread badge dynamically
+            const roomId = data.data.room_id;
+            const badge = document.querySelector(
+              `[data-room="${roomId}"] .unread-badge`,
             );
-
-            notificationSocket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
-                if (data.type === 'notify' && data.data.event === 'new_message') {
-                    // Play sound / show toast
-                    console.log("New message:", data.data);
-
-                    // Example: update unread badge dynamically
-                    const roomId = data.data.room_id;
-                    const badge = document.querySelector(`[data-room="${roomId}"] .unread-badge`);
-                    const last_message = document.querySelector(`[data-room="${roomId}"] .last-message`)
-                    if (badge) {
-                        let count = parseInt(badge.innerText) || 0;
-                        badge.innerText = count + 1;
-                        badge.style.display = "inline";
-                    }
-                  last_message.innerText = `- ${data.data.content}`
-                }
-            };
-        });
+            const last_message = document.querySelector(
+              `[data-room="${roomId}"] .last-message`,
+            );
+            if (badge) {
+              let count = parseInt(badge.innerText) || 0;
+              badge.innerText = count + 1;
+              badge.style.display = "inline";
+            }
+            last_message.innerText = `- ${data.data.content}`;
+          }
+        };
+      });
     </script>
-</body>
+  </body>
 </html>

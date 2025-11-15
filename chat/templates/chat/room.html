@@ -1,98 +1,110 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <meta charset="utf-8"/>
+  <head>
+    <meta charset="utf-8" />
     <title>Chat Room</title>
-</head>
-<body>
+  </head>
+  <body>
     <ul id="chat-log">
       {% for msg in messages %}
 
-        <li data-time="{{ msg.timestamp|date:'c' }}">
-          <strong>{{ msg.user.username }}</strong>:
-          {{ msg.content }}
-        </li>
+      <li data-time="{{ msg.timestamp|date:'c' }}">
+        <strong>{{ msg.user.username }}</strong>: {{ msg.content }}
+      </li>
       {% endfor %}
     </ul>
 
-    <input id="chat-message-input" type="text" size="100"><br>
-    <input id="chat-message-submit" type="button" value="Send">
+    <input id="chat-message-input" type="text" size="100" /><br />
+    <input id="chat-message-submit" type="button" value="Send" />
     {{ room_name|json_script:"room-name" }}
     <script>
 
       // convert utc to local time
-        document.querySelectorAll('[data-time]').forEach(li => {
-          const date = new Date(li.dataset.time);
-          const localTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          li.insertAdjacentText('afterbegin', `(${localTime}) `);
-        });
+      document.querySelectorAll('[data-time]').forEach(li => {
+        const date = new Date(li.dataset.time);
+        const localTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        li.insertAdjacentText('afterbegin', `(${localTime}) `);
+      });
 
 
-        const user_id = "{{request.user.id}}";
-        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+      const user_id = "{{request.user.id}}";
+      const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
-        const chatSocket = new WebSocket(
-            'ws://'
-            + window.location.host
-            + '/ws/chat/'
-            + roomName
-            + '/'
-        );
+      const chatSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/chat/'
+        + roomName
+        + '/'
+      );
 
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            // TODO: I'm removing Anonymous User for now!
+      chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        // TODO: I'm removing Anonymous User for now!
 
-            const my_id = {{request.user.id}}
+        const my_id = {{request.user.id}}
 
-            const chatLog = document.querySelector('#chat-log');
+        const chatLog = document.querySelector('#chat-log');
 
-            if (data.user.id === my_id) {
-                // Message sent by me
-                const message = `<li style="color: red;">${data.user.username}: ${data.message}</li>`;
-                chatLog.innerHTML += message;
-            } else {
-                // Message from someone else
-                const message = `<li>${data.user.username}: ${data.message}</li>`;
-                chatLog.innerHTML += message;
-            }
+        if (data.user.id === my_id) {
+          // Message sent by me
+          const message = `<li style="color: red;">${data.user.username}: ${data.message}</li>`;
+          chatLog.innerHTML += message;
+        } else {
+          // Message from someone else
+            const message = `<li>${data.user.username}: ${data.message}</li>`;
+          chatLog.innerHTML += message;
+        }
 
-            chatLog.scrollTop = chatLog.scrollHeight;
-        };
+        chatLog.scrollTop = chatLog.scrollHeight;
+
+        // if the user is in the room and has received a message,
+        // we consider it to be read.
+        chatSocket.send(JSON.stringify({
+          'type': 'message_read',
+          'data': {
+            'user': user_id, // id
+          }
+        }));
+
+      };
 
 
-        chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
-        };
+      chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+      };
 
-        document.querySelector('#chat-message-input').focus();
-        document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.key === 'Enter') {  // enter, return
-                document.querySelector('#chat-message-submit').click();
-            }
-        };
+      document.querySelector('#chat-message-input').focus();
+      document.querySelector('#chat-message-input').onkeyup = function(e) {
+        if (e.key === 'Enter') {  // enter, return
+          document.querySelector('#chat-message-submit').click();
+        }
+      };
 
-        document.querySelector('#chat-message-submit').onclick = function(e) {
-            const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
-            chatSocket.send(JSON.stringify({
-                'user':user_id, // id
-                'message': message,
-            }));
-            messageInputDom.value = '';
-        };
+      document.querySelector('#chat-message-submit').onclick = function(e) {
+        const messageInputDom = document.querySelector('#chat-message-input');
+        const message = messageInputDom.value;
+        chatSocket.send(JSON.stringify({
+          'type': 'message',
+          'data' : {
+            'user':user_id, // id
+            'message': message,
+          }
+        }));
+        messageInputDom.value = '';
+      };
     </script>
     <style>
-        #chat-log {
-            height: 300px;
-            width: 800px;
-            overflow-y: auto;
-            background: #f0f0f0; /* light background */
-            color: black;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-        }
+      #chat-log {
+        height: 300px;
+        width: 800px;
+        overflow-y: auto;
+        background: #f0f0f0; /* light background */
+        color: black;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
     </style>
-</body>
+  </body>
 </html>

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import CustomUser, FriendRequest
+from chat.utils import get_or_create_private_room
 
 
 @login_required
@@ -70,6 +71,18 @@ def reject_friend_request(request, request_id):
     messages.info(
         request, f"You rejected {friend_request.from_user.full_name}'s friend request!")
     return redirect("friends:friend_requests")
+
+
+@login_required
+def start_private_chat(request, friend_id):
+    friend = CustomUser.objects.get(id=friend_id)
+    print("Starting private chat...")
+
+    room, created = get_or_create_private_room(request.user, friend)
+
+    # TODO: Maybe we can obfuscate the name better here
+    # and have corresponding enforcement in the backend for truly private chats
+    return redirect("chat:room", room_name=str(room.name))
 
 
 @login_required

@@ -1,8 +1,12 @@
 <h2>Your Friends</h2>
 <ul>
   {% for friend in friends %}
-    <li>{{ friend.full_name }}</li>
+  <li>
+    <a href="{% url 'friends:start_private_chat' friend.id %}">
+      {{ friend.full_name }}
+    </a>
+  </li>
   {% empty %}
-    <li>You have no friends yet 😢</li>
+  <li>You have no friends yet 😢</li>
   {% endfor %}
 </ul>
