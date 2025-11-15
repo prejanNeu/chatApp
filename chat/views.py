@@ -6,7 +6,7 @@ from .models import ChatRoom, Message, MessageReadStatus
 def index(request):
 
     user = request.user
-    rooms = ChatRoom.objects.filter(users=user)
+    rooms = user.chat_rooms.all()
 
     room_data = []
     for room in rooms:

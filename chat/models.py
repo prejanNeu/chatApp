@@ -46,4 +46,7 @@ class MessageReadStatus(models.Model):
     read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        unique_together = ("user", "message")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "message"], name="unique_message_read_status")
+        ]

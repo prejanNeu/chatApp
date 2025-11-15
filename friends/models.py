@@ -21,7 +21,10 @@ class FriendRequest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("from_user", "to_user")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["from_user", "to_user"], name="unique_friend_requests")
+        ]
 
     def __str__(self):
         status = "Accepted" if self.is_accepted else "Pending"
