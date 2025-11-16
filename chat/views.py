@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from .models import ChatRoom, Message, MessageReadStatus
+from django.contrib import messages
 
 
+@login_required
 def index(request):
 
     user = request.user
@@ -30,13 +32,21 @@ def index(request):
 
 @login_required
 def room(request, room_name):
-    room, created = ChatRoom.objects.get_or_create(name=room_name)
-    room.users.add(request.user)
+    try:
+        room = ChatRoom.objects.get(name=room_name)
+    except ChatRoom.DoesNotExist:
+        messages.error(request, "Chat room does not exist.")
+        return redirect("chat:index")
 
-    # TODO: how to retrieve more messages when the user scrolls up more
-    messages = Message.objects.filter(room=room).select_related(
+    # permission check
+    if request.user not in room.users.all():
+        messages.error(request, "You are not allowed to join the chat.")
+        return redirect("chat:index")
+
+    messages_qs = Message.objects.filter(room=room).select_related(
         "user").order_by("timestamp")[:50]
+
     return render(request, "chat/room.html", {
         "room_name": room_name,
-        "messages": messages
+        "messages": messages_qs
     })

@@ -8,7 +8,7 @@ from .models import CustomUser
 
 def register(request):
     if request.user.is_authenticated:
-        return redirect("login")
+        return redirect("accounts:login")
 
     if request.method == 'POST':
         username = request.POST.get("username", "").strip()
@@ -20,11 +20,11 @@ def register(request):
         # Validation
         if not all([username, email, full_name, password, password2]):
             messages.error(request, "All fields are required.")
-            return redirect("register")
+            return redirect("accounts:register")
 
         if password != password2:
             messages.error(request, "Passwords must match.")
-            return redirect("register")
+            return redirect("accounts:register")
 
         try:
             CustomUser.objects.create_user(
@@ -35,25 +35,25 @@ def register(request):
             )
             messages.success(
                 request, "Registration successful! Please log in.")
-            return redirect("login")
+            return redirect("accounts:login")
 
         except IntegrityError as e:
             messages.error(request, "Username or email already exists.")
             messages.error(request, f"{email} already exits?")
             print(e)
-            return redirect("register")
+            return redirect("accounts:register")
 
         except Exception as e:
             messages.error(
                 request, "An error occurred during registration. Please try again.")
-            return redirect("register")
+            return redirect("accounts:register")
 
     return render(request, "accounts/register.html")
 
 
 def login(request):
     if request.user.is_authenticated:
-        return redirect("index")
+        return redirect("chat:index")
 
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
@@ -61,18 +61,18 @@ def login(request):
 
         if not username or not password:
             messages.error(request, "Both username and password are required.")
-            return redirect("login")
+            return redirect("accounts:login")
 
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
             auth_login(request, user)
             messages.success(request, f"Welcome back, {user.username}!")
-            next_url = request.GET.get('next', 'index')
+            next_url = request.GET.get('next', 'chat:index')
             return redirect(next_url)
         else:
             messages.error(request, "Invalid username or password.")
-            return redirect("login")
+            return redirect("accounts:login")
 
     return render(request, "accounts/login.html")
 
@@ -81,4 +81,4 @@ def login(request):
 def logout(request):
     auth_logout(request)
     messages.success(request, "You have been logged out successfully.")
-    return redirect("login")
+    return redirect("accounts:login")

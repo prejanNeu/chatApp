@@ -1,5 +1,9 @@
 from django.db import transaction
+from django.db.models import Q
+
 from .models import ChatRoom, PrivateChat
+from friends.models import FriendRequest
+import hashlib
 
 
 def serialize_user(user):
@@ -15,12 +19,12 @@ def get_sorted_pair(u1, u2):
 
 
 @transaction.atomic
-def get_or_create_private_room(user1, user2, room_name_prefix="private_chat"):
+def get_or_create_private_room(user, friend):
     """
     Returns (room, created_bool). Ensures private chat exists for the pair.
     Uses sorted ids so pair order doesn't matter.
     """
-    u_small, u_big = get_sorted_pair(user1, user2)
+    u_small, u_big = get_sorted_pair(user, friend)
 
     # Try to find existing PrivateChat
     try:
@@ -31,9 +35,21 @@ def get_or_create_private_room(user1, user2, room_name_prefix="private_chat"):
         # create new ChatRoom and PrivateChat
         # TODO: maybe we use a hash to make the room name more cryptic
         room = ChatRoom.objects.create(
-            name=f"{room_name_prefix}_{user1.username}_{user2.username}")
+            name=private_room_name(u_small, u_big), display_name=friend.full_name)
         # attach both users to the room.users M2M
-        room.users.add(user1, user2)
+        room.users.add(user, friend)
         pc = PrivateChat.objects.create(
             user_a=u_small, user_b=u_big, room=room)
         return room, True
+
+
+def are_friends(user1, user2):
+    return FriendRequest.objects.filter(
+        (Q(from_user=user1, to_user=user2) | Q(from_user=user2, to_user=user1)),
+        is_accepted=True
+    ).exists()
+
+
+def private_room_name(user1, user2):
+    base = f"{min(user1.id, user2.id)}:{max(user1.id, user2.id)}"
+    return hashlib.sha256(base.encode()).hexdigest()

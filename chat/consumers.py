@@ -1,10 +1,12 @@
 import json
 
 from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.utils import timezone
 from .models import ChatRoom, Message, MessageReadStatus
 from .utils import serialize_user
+from channels.exceptions import DenyConnection
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -19,6 +21,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
+
+        if self.user not in await database_sync_to_async(lambda: list(room.users.all()))():
+            raise DenyConnection("Not allowed.")
 
         await mark_messages_as_read(self.user, room)
 
