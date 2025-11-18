@@ -13,5 +13,7 @@ urlpatterns = [
          name="reject_friend_request"),
     path("chat/<int:friend_id>/", views.start_private_chat,
          name="start_private_chat"),
+    
+    path("search_friend/", views.search_users, name="search_friend"),
 
 ]

@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import CustomUser, FriendRequest
 from chat.utils import get_or_create_private_room, are_friends
-
+from django.db.models import Q 
 
 @login_required
 def friend_list(request):
@@ -88,6 +88,52 @@ def start_private_chat(request, friend_id):
     return redirect("chat:room", room_name=room.name)
 
 
+
 @login_required
 def search_users(request):
-    ...
+
+    current_user = request.user
+    all_users = CustomUser.objects.exclude(id=current_user.id)
+
+    requests = FriendRequest.objects.filter(
+        Q(from_user=current_user) | Q(to_user=current_user)
+    )
+
+    sent_reqs = {fr.to_user_id: fr for fr in requests if fr.from_user_id == current_user.id}   # send request by user 
+    received_reqs = {fr.from_user_id: fr for fr in requests if fr.to_user_id == current_user.id}
+    adding = []
+
+    for user in all_users:
+        user_id = user.id
+
+        if user_id in sent_reqs:
+            fr = sent_reqs[user_id]
+            adding.append({
+                "user": user,
+                "friend": fr.is_accepted,
+                "is_pending": True
+            })
+
+        elif user_id in received_reqs:
+            fr = received_reqs[user_id]
+            adding.append({
+                "user": user,
+                "friend": fr.is_accepted,
+                "is_pending": False
+            })
+
+        else:
+            adding.append({
+                "user": user,
+                "friend": False,
+                "is_pending": False,
+            })
+            
+            
+            # is_pending -->True  is not accepted by other 
+            # is_pending -->True  isnot accepted by current user 
+            
+    
+            
+    return render(request, "friends/search_friend_list.html", {"adding": adding})
+            
