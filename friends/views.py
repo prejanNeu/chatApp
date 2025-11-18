@@ -109,24 +109,33 @@ def search_users(request):
         if user_id in sent_reqs:
             fr = sent_reqs[user_id]
             adding.append({
+                "request_id":fr.id,
                 "user": user,
                 "friend": fr.is_accepted,
-                "is_pending": True
+                "is_pending": True,
+                "requested": True,
             })
 
         elif user_id in received_reqs:
             fr = received_reqs[user_id]
+            print(user.username)
+            print(vars(fr))
             adding.append({
+                "request_id": fr.id,
                 "user": user,
                 "friend": fr.is_accepted,
-                "is_pending": False
+                "is_pending": False,
+                "requested": True
             })
 
         else:
+            
             adding.append({
+                "reuest_id": None,
                 "user": user,
                 "friend": False,
                 "is_pending": False,
+                "requested": False
             })
             
             
