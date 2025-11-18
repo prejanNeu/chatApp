@@ -90,6 +90,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             case "message_read":
                 room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
                 await mark_messages_as_read(self.user, room)
+
+                await self.channel_layer.group_send(
+                    f"notification_{self.user.id}",
+                    {
+                        "type": "notify",
+                        "data": {
+                            "event": "unread_cleared",
+                            "room_id": str(room.room_id),
+                        }
+                    }
+                )
+
             case _:
                 print("Unkown type")
 

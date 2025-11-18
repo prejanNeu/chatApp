@@ -44,7 +44,7 @@ def room(request, room_name):
         return redirect("chat:index")
 
     messages_qs = Message.objects.filter(room=room).select_related(
-        "user").order_by("timestamp")[:50]
+        "user")[50:]
 
     return render(request, "chat/room.html", {
         "room_name": room_name,

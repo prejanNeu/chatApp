@@ -7,6 +7,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         self.user = self.scope['user']
         self.group_name = f"notification_{self.user.id}"
 
+        if not self.user.is_authenticated:
+            await self.close()
+            return
+
         await self.channel_layer.group_add(
             self.group_name,
             self.channel_name
@@ -22,8 +26,5 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     async def notify(self, event):
         await self.send(
-            text_data=json.dumps({
-                "type": event["type"],
-                "data": event["data"],
-            })
+            text_data=json.dumps(event["data"])
         )
