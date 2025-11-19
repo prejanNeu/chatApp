@@ -39,7 +39,11 @@
     <script>
         const my_id = {{request.user.id}}
     </script>
-    <script src="{% static 'chat/room.js' %}"></script>
+    <!--
+      The query parameter is just for forcing the browser to reload the script
+      and should be REMOVED IN PRODUCTION
+    -->
+    <script src="{% static 'chat/room.js' %}?{% now "U" %}"></script>
 
   </body>
 </html>

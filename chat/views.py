@@ -19,9 +19,17 @@ def index(request):
             is_read=False
         ).count()
 
+        # Logic for dynamic display name
+        display_name = room.display_name
+        if hasattr(room, 'private_chat'):
+            private_chat = room.private_chat
+            other_user = private_chat.user_a if private_chat.user_b == user else private_chat.user_b
+            display_name = other_user.full_name or other_user.username
+
         room_data.append(
             {
                 'room': room,
+                'display_name': display_name,
                 'last_message': last_message,
                 'unread_count': unread_count
             }
@@ -43,8 +51,8 @@ def room(request, room_name):
         messages.error(request, "You are not allowed to join the chat.")
         return redirect("chat:index")
 
-    messages_qs = Message.objects.filter(room=room).select_related(
-        "user")[50:]
+    # TODO: Don't send all the messages at once
+    messages_qs = Message.objects.filter(room=room).select_related("user")
 
     return render(request, "chat/room.html", {
         "room_name": room_name,

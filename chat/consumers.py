@@ -53,8 +53,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     content=message
                 )
 
-                # Mark the message as unread by other users in the group
-                room_users = await sync_to_async(lambda: list(room.users.exclude(id=user.id)))()
+                # Mark the message as unread by all users in the group
+                room_users = await sync_to_async(lambda: list(room.users.all()))()
                 for u in room_users:
                     await sync_to_async(MessageReadStatus.objects.create)(
                         user=u, message=msg, is_read=False
@@ -82,13 +82,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     self.room_group_name,
                     {
                         "type": "chat.message",
-                        "message": message,
-                        "user": serialize_user(user),
-                        "timestamp": msg.timestamp.isoformat(),
+                        "data": {
+                            "message": message,
+                            "sender": serialize_user(user),
+                            "timestamp": msg.timestamp.isoformat(),
+                        }
                     },
                 )
             case "message_read":
                 room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
+                # all users currently in the room will send this "receipt" acknowledging that they've "read" the message
                 await mark_messages_as_read(self.user, room)
 
                 await self.channel_layer.group_send(
@@ -110,11 +113,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
 
         # Send message to WebSocket
-        await self.send(text_data=json.dumps({
-            "message": event["message"],
-            "user": event['user'],
-            "timestamp": event['timestamp'],
-        }))
+        await self.send(
+            text_data=json.dumps(event["data"])
+        )
 
 
 @sync_to_async

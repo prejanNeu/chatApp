@@ -11,7 +11,7 @@
       {% for entry in rooms %}
       <li data-room="{{ entry.room.room_id }}">
         <a href="{% url 'chat:room' entry.room.name %}">
-          {{ entry.room.display_name }}
+          {{ entry.display_name }}
         </a>
 
         {% if entry.last_message %}
