@@ -216,6 +216,20 @@ chatLog.addEventListener("scroll", () => {
 function handleMessageReceive(e) {
   const data = JSON.parse(e.data);
 
+  if (data.event === "user_join" || data.event === "user_leave") {
+      const action = data.event === "user_join" ? "joined" : "left";
+      const systemMsg = `
+        <div style="text-align: center; margin: 10px 0; color: var(--text-muted); font-size: 0.8rem;">
+            ${data.username} ${action} the chat
+        </div>
+      `;
+      chatLog.insertAdjacentHTML('beforeend', systemMsg);
+      if (!viewingOldMessages) {
+          chatLog.scrollTop = chatLog.scrollHeight;
+      }
+      return;
+  }
+
   let messageContent = data.message;
   if (data.is_file) {
     messageContent = `<a href="${data.message}" target="_blank" style="color: inherit; text-decoration: underline;">File Attachment</a>`;

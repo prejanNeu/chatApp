@@ -29,7 +29,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
+        # Broadcast user_join event
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "chat_activity",
+                "data": {
+                    "event": "user_join",
+                    "username": self.user.username
+                }
+            }
+        )
+
     async def disconnect(self, close_code):
+        # Broadcast user_leave event
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "chat_activity",
+                "data": {
+                    "event": "user_leave",
+                    "username": self.user.username
+                }
+            }
+        )
+
         # Leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
@@ -116,6 +140,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
 
         # Send message to WebSocket
+        await self.send(
+            text_data=json.dumps(event["data"])
+        )
+
+    async def chat_activity(self, event):
         await self.send(
             text_data=json.dumps(event["data"])
         )
