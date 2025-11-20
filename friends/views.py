@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from .models import CustomUser, FriendRequest
-from chat.utils import get_or_create_private_room, are_friends
-from django.db.models import Q 
+from django.db.models import Q
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+from accounts.models import CustomUser
+from .models import FriendRequest
+from chat.utils import get_or_create_private_room, are_friends 
 
 @login_required
 def friend_list(request):
@@ -15,8 +18,17 @@ def friend_list(request):
         to_user=user, is_accepted=True).values_list('from_user', flat=True)
     friends = CustomUser.objects.filter(
         id__in=list(friends_from) + list(friends_to))
+    
+    # Get pending friend request count
+    pending_requests_count = FriendRequest.objects.filter(
+        to_user=user,
+        is_accepted=False
+    ).count()
 
-    return render(request, "friends/friends.html", {"friends": friends})
+    return render(request, "friends/friends.html", {
+        "friends": friends,
+        "pending_requests_count": pending_requests_count
+    })
 
 
 @login_required
@@ -25,10 +37,12 @@ def friend_requests(request):
         to_user=request.user, is_accepted=False)
     outgoing = FriendRequest.objects.filter(
         from_user=request.user, is_accepted=False)
+    pending_requests_count = incoming.count() # Count of incoming requests
 
     return render(request, "friends/friend_requests.html", {
         "incoming": incoming,
         "outgoing": outgoing,
+        "pending_requests_count": pending_requests_count
     })
 
 
@@ -46,10 +60,25 @@ def send_friend_request(request, user_id):
     )
 
     if not created:
-        messages.info(request, "Friend Request is already sent.")
+        messages.info(request, "Friend request already sent.")
     else:
+        to_user_name = to_user.full_name or to_user.username
         messages.success(
-            request, f"Friend Request Sent: {friend_request}")
+            request, f"Friend request sent to {to_user_name}!")
+        
+        # Send WebSocket notification to recipient
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"notification_{to_user.id}",
+            {
+                "type": "notify",
+                "data": {
+                    "event": "friend_request_received",
+                    "from_user": request.user.username,
+                    "from_user_id": request.user.id
+                }
+            }
+        )
     return redirect("friends:friend_list")
 
 
@@ -59,8 +88,26 @@ def accept_friend_request(request, request_id):
         id=request_id, to_user=request.user)
     friend_request.is_accepted = True
     friend_request.save()
+    
+    # Auto-create chat room
+    get_or_create_private_room(friend_request.from_user, friend_request.to_user)
+    
     messages.success(
         request, f"You are now friends with {friend_request.from_user.full_name}!")
+    
+    # Send WebSocket notification to requester that request was accepted
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"notification_{friend_request.from_user.id}",
+        {
+            "type": "notify",
+            "data": {
+                "event": "friend_request_accepted",
+                "from_user": request.user.username,
+                "from_user_id": request.user.id
+            }
+        }
+    )
     return redirect("friends:friend_requests")
 
 
@@ -68,9 +115,25 @@ def accept_friend_request(request, request_id):
 def reject_friend_request(request, request_id):
     friend_request = FriendRequest.objects.get(
         id=request_id, to_user=request.user)
+    from_user_id = friend_request.from_user.id
     friend_request.delete()
+    from_user_name = friend_request.from_user.full_name or friend_request.from_user.username
     messages.info(
-        request, f"You rejected {friend_request.from_user.full_name}'s friend request!")
+        request, f"Declined friend request from {from_user_name}.")
+    
+    # Send WebSocket notification to requester that request was rejected
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"notification_{from_user_id}",
+        {
+            "type": "notify",
+            "data": {
+                "event": "friend_request_rejected",
+                "from_user": request.user.username,
+                "from_user_id": request.user.id
+            }
+        }
+    )
     return redirect("friends:friend_requests")
 
 
@@ -107,8 +170,23 @@ def start_private_chat(request, friend_id):
 @login_required
 def cancel_friend_request(request, request_id):
     friend_request = FriendRequest.objects.get(id=request_id, from_user=request.user)
+    to_user_id = friend_request.to_user.id
     friend_request.delete()
     messages.info(request, "Friend request cancelled.")
+    
+    # Send WebSocket notification to recipient that request was cancelled
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"notification_{to_user_id}",
+        {
+            "type": "notify",
+            "data": {
+                "event": "friend_request_cancelled",
+                "from_user": request.user.username,
+                "from_user_id": request.user.id
+            }
+        }
+    )
     return redirect("friends:friend_requests")
 
 
@@ -155,7 +233,7 @@ def search_users(request):
         else:
             
             adding.append({
-                "reuest_id": None,
+                "request_id": None,
                 "user": user,
                 "friend": False,
                 "is_pending": False,
@@ -165,8 +243,52 @@ def search_users(request):
             
             # is_pending -->True  is not accepted by other 
             # is_pending -->True  isnot accepted by current user 
+            # is_pending -->False  is accepted by current user 
             
     
             
-    return render(request, "friends/search_friend_list.html", {"adding": adding})
+    # Friend Recommendations (Friends of Friends)
+    # 1. Get IDs of current friends
+    friends_from = FriendRequest.objects.filter(
+        from_user=current_user, is_accepted=True).values_list('to_user', flat=True)
+    friends_to = FriendRequest.objects.filter(
+        to_user=current_user, is_accepted=True).values_list('from_user', flat=True)
+        
+    friend_ids = list(friends_from) + list(friends_to)
+    
+    # 2. Find friends of my friends
+    # We look for accepted requests where one user is in my friend_ids
+    # and the other is NOT me and NOT in my friend_ids
+    suggestions = []
+    suggested_ids = set()
+    
+    potential_friends = FriendRequest.objects.filter(
+        (Q(from_user__id__in=friend_ids) | Q(to_user__id__in=friend_ids)),
+        is_accepted=True
+    ).select_related('from_user', 'to_user')
+    
+    for pf in potential_friends:
+        candidate = None
+        if pf.from_user_id in friend_ids:
+            candidate = pf.to_user
+        else:
+            candidate = pf.from_user
+            
+        if candidate.id != current_user.id and candidate.id not in friend_ids and candidate.id not in suggested_ids:
+            # Check if I already sent a request to them (pending)
+            if candidate.id not in sent_reqs and candidate.id not in received_reqs:
+                suggestions.append(candidate)
+                suggested_ids.add(candidate.id)
+    
+    # Get pending friend request count
+    pending_requests_count = FriendRequest.objects.filter(
+        to_user=request.user,
+        is_accepted=False
+    ).count()
+    
+    return render(request, "friends/search_friend_list.html", {
+        "adding": adding,
+        "suggestions": suggestions,
+        "pending_requests_count": pending_requests_count
+    })
             

@@ -6,8 +6,7 @@
 {% block content %}
     <div class="chat-layout">
       <!-- Sidebar -->
-      <!-- Sidebar -->
-      {% include 'chat/partials/sidebar_menu.html' %}
+      {% include 'chat/partials/sidebar_profile.html' %}
 
       <!-- Main Content -->
       <div class="chat-area">
@@ -28,19 +27,19 @@
                 </div>
                 <div class="form-group">
                     <label>Username</label>
-                    <div class="form-control" style="background-color: #f9fafb;">{{ user.username }}</div>
+                    <div class="form-control">{{ user.username }}</div>
                 </div>
                 <div class="form-group">
                     <label>Full Name</label>
-                    <div class="form-control" style="background-color: #f9fafb;">{{ user.full_name }}</div>
+                    <div class="form-control">{{ user.full_name }}</div>
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <div class="form-control" style="background-color: #f9fafb;">{{ user.email }}</div>
+                    <div class="form-control">{{ user.email }}</div>
                 </div>
                 <div class="form-group">
                     <label>Joined</label>
-                    <div class="form-control" style="background-color: #f9fafb;">{{ user.date_joined|date:"F j, Y" }}</div>
+                    <div class="form-control">{{ user.date_joined|date:"F j, Y" }}</div>
                 </div>
             </div>
         </div>

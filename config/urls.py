@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import include, path
-from chat.views import landing_page
 
 from chat import views as chat_views
 

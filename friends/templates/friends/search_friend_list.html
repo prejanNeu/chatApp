@@ -27,6 +27,7 @@
           border-bottom: 1px solid var(--border-color) !important;
           padding: 12px !important;
           color: var(--text-color);
+          background-color: transparent !important; /* Ensure it inherits theme */
       }
       .dataTables_filter input {
           border: 1px solid var(--border-color);
@@ -63,7 +64,30 @@
           <h3>Find Friends</h3>
         </div>
         
-        <div class="chat-messages" style="padding: 0; background: #fff;">
+        <div class="chat-messages" style="padding: 0;">
+            {% if suggestions %}
+            <div style="padding: 20px 20px 0 20px;">
+                <h4 style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Suggested Friends</h4>
+                <ul class="room-list">
+                  {% for user in suggestions %}
+                  <li class="room-item">
+                    <div class="room-info">
+                        <div class="room-header">
+                            <span class="room-name">{{ user.full_name|default:user.username }}</span>
+                        </div>
+                        <span class="last-message">@{{ user.username }} • Mutual Friend</span>
+                    </div>
+                    <a href="{% url 'friends:send_friend_request' user.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;">Add Friend</a>
+                  </li>
+                  {% endfor %}
+                </ul>
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+            {% endif %}
+
+            <div style="padding: 0 20px;">
+                <h4 style="margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">All Users</h4>
+            </div>
             <table class="datatable">
                 <thead>
                     <tr>
@@ -82,13 +106,13 @@
                     </td>
                     <td>
                         {% if item.friend %}
-                            <span class="status-badge status-friend">Friends</span>
+                            <span style="color: var(--text-muted);">Friends</span>
                         {% elif item.is_pending and item.requested %}
-                            <span class="status-badge status-pending">Request Sent</span>
+                            <span style="color: var(--text-muted);">Request Sent</span>
                         {% elif not item.is_pending and item.requested %}
-                            <a href="/friends/accept/{{item.request_id}}" class="action-btn">Accept Request</a>
+                            <a href="{% url 'friends:accept_friend_request' item.request_id %}" class="btn btn-primary btn-sm">Accept Request</a>
                         {% elif not item.requested %}
-                            <a href="/friends/add/{{item.user.id}}" class="action-btn">Add Friend</a>
+                            <a href="{% url 'friends:send_friend_request' item.user.id %}" class="btn btn-primary btn-sm">Add Friend</a>
                         {% endif %}
                     </td>
                 </tr>

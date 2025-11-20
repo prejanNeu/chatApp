@@ -11,7 +11,10 @@ messages.forEach((li) => {
     hour: "2-digit",
     minute: "2-digit",
   });
-  li.insertAdjacentText("afterbegin", `(${localTime}) `);
+  const timeDiv = document.createElement('div');
+  timeDiv.className = 'message-time';
+  timeDiv.textContent = localTime;
+  li.appendChild(timeDiv);
 });
 
 const fileNameDisplay = document.querySelector("#file-name-display");
@@ -140,6 +143,7 @@ chatLog.scrollTop = chatLog.scrollHeight;
 
 // TODO: add some scroll event to count unreads in the front end when viewing older messages
 let viewingOldMessages = false;
+let markReadTimeout = null;
 
 // SOCKET
 const roomName = JSON.parse(document.getElementById("room-name").textContent);
@@ -205,32 +209,71 @@ function fetchMessages() {
                 // Safe construction of message element
                 const msgDiv = document.createElement('div');
                 msgDiv.className = `message ${msg.is_me ? 'sent' : 'received'}`;
-                
-                const senderDiv = document.createElement('div');
-                senderDiv.className = 'message-sender';
-                senderDiv.textContent = msg.sender;
-                msgDiv.appendChild(senderDiv);
 
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'message-content';
                 
                 if (msg.is_file) {
+                    const fileAttachment = document.createElement('div');
+                    fileAttachment.className = 'file-attachment';
+                    
+                    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    icon.setAttribute('width', '16');
+                    icon.setAttribute('height', '16');
+                    icon.setAttribute('viewBox', '0 0 24 24');
+                    icon.setAttribute('fill', 'none');
+                    icon.setAttribute('stroke', 'currentColor');
+                    icon.setAttribute('stroke-width', '2');
+                    icon.setAttribute('stroke-linecap', 'round');
+                    icon.setAttribute('stroke-linejoin', 'round');
+                    
+                    if (msg.is_image) {
+                        // Image icon
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', '3');
+                        rect.setAttribute('y', '3');
+                        rect.setAttribute('width', '18');
+                        rect.setAttribute('height', '18');
+                        rect.setAttribute('rx', '2');
+                        rect.setAttribute('ry', '2');
+                        icon.appendChild(rect);
+                        
+                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        circle.setAttribute('cx', '8.5');
+                        circle.setAttribute('cy', '8.5');
+                        circle.setAttribute('r', '1.5');
+                        icon.appendChild(circle);
+                        
+                        const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                        polyline.setAttribute('points', '21 15 16 10 5 21');
+                        icon.appendChild(polyline);
+                    } else {
+                        // File icon
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        path.setAttribute('d', 'M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z');
+                        icon.appendChild(path);
+                        
+                        const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                        polyline.setAttribute('points', '13 2 13 9 20 9');
+                        icon.appendChild(polyline);
+                    }
+                    
+                    fileAttachment.appendChild(icon);
+                    
                     const link = document.createElement('a');
                     link.href = msg.content;
                     link.target = '_blank';
-                    link.style.color = 'inherit';
-                    link.style.textDecoration = 'underline';
-                    link.textContent = 'File Attachment';
-                    contentDiv.appendChild(link);
+                    link.className = 'file-link';
+                    const filename = msg.content.split('/').pop().substring(0, 40);
+                    link.textContent = filename;
+                    fileAttachment.appendChild(link);
+                    
+                    contentDiv.appendChild(fileAttachment);
                     
                     if (msg.is_image) {
-                        contentDiv.appendChild(document.createElement('br'));
                         const img = document.createElement('img');
                         img.src = msg.content;
-                        img.style.maxWidth = '200px';
-                        img.style.maxHeight = '200px';
-                        img.style.borderRadius = '8px';
-                        img.style.marginTop = '5px';
+                        img.className = 'message-image';
                         contentDiv.appendChild(img);
                     }
                 } else {
@@ -242,7 +285,7 @@ function fetchMessages() {
                 const localTime = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
                 const timeDiv = document.createElement('div');
                 timeDiv.className = 'message-time';
-                timeDiv.textContent = `(${localTime})`;
+                timeDiv.textContent = localTime;
                 msgDiv.appendChild(timeDiv);
 
                 chatLog.insertAdjacentElement('afterbegin', msgDiv);
@@ -305,10 +348,15 @@ function handleMessageReceive(e) {
       if (data.username === current_username) return; // Ignore own typing
       
       const typingIndicator = document.getElementById("typing-indicator");
-      if (data.is_typing) {
-          typingIndicator.textContent = `${data.username} is typing...`;
-      } else {
-          typingIndicator.textContent = "";
+      
+      if (typingIndicator) {
+          if (data.is_typing) {
+              typingIndicator.textContent = `${data.username} is typing...`;
+              typingIndicator.style.display = "block";
+          } else {
+              typingIndicator.textContent = "";
+              typingIndicator.style.display = "none";
+          }
       }
       return;
   }
@@ -319,31 +367,70 @@ function handleMessageReceive(e) {
   const msgDiv = document.createElement('div');
   msgDiv.className = `message ${msgClass}`;
 
-  const senderDiv = document.createElement('div');
-  senderDiv.className = 'message-sender';
-  senderDiv.textContent = data.sender.username;
-  msgDiv.appendChild(senderDiv);
-
   const contentDiv = document.createElement('div');
   contentDiv.className = 'message-content';
 
   if (data.is_file) {
+      const fileAttachment = document.createElement('div');
+      fileAttachment.className = 'file-attachment';
+      
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('width', '16');
+      icon.setAttribute('height', '16');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '2');
+      icon.setAttribute('stroke-linecap', 'round');
+      icon.setAttribute('stroke-linejoin', 'round');
+      
+      if (data.message.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+          // Image icon
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', '3');
+          rect.setAttribute('y', '3');
+          rect.setAttribute('width', '18');
+          rect.setAttribute('height', '18');
+          rect.setAttribute('rx', '2');
+          rect.setAttribute('ry', '2');
+          icon.appendChild(rect);
+          
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', '8.5');
+          circle.setAttribute('cy', '8.5');
+          circle.setAttribute('r', '1.5');
+          icon.appendChild(circle);
+          
+          const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+          polyline.setAttribute('points', '21 15 16 10 5 21');
+          icon.appendChild(polyline);
+      } else {
+          // File icon
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', 'M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z');
+          icon.appendChild(path);
+          
+          const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+          polyline.setAttribute('points', '13 2 13 9 20 9');
+          icon.appendChild(polyline);
+      }
+      
+      fileAttachment.appendChild(icon);
+      
       const link = document.createElement('a');
       link.href = data.message;
       link.target = '_blank';
-      link.style.color = 'inherit';
-      link.style.textDecoration = 'underline';
-      link.textContent = 'File Attachment';
-      contentDiv.appendChild(link);
+      link.className = 'file-link';
+      const filename = data.message.split('/').pop().substring(0, 40);
+      link.textContent = filename;
+      fileAttachment.appendChild(link);
+      
+      contentDiv.appendChild(fileAttachment);
 
       if (data.message.match(/\.(jpeg|jpg|gif|png)$/) != null) {
-          contentDiv.appendChild(document.createElement('br'));
           const img = document.createElement('img');
           img.src = data.message;
-          img.style.maxWidth = '200px';
-          img.style.maxHeight = '200px';
-          img.style.borderRadius = '8px';
-          img.style.marginTop = '5px';
+          img.className = 'message-image';
           contentDiv.appendChild(img);
       }
   } else {
@@ -359,6 +446,12 @@ function handleMessageReceive(e) {
 
   chatLog.appendChild(msgDiv);
 
+  // Remove "No messages yet" text if it exists
+  const noMessagesText = document.getElementById('no-messages-text');
+  if (noMessagesText) {
+    noMessagesText.remove();
+  }
+
   // If we are not viewing old messages (i.e., we are at the bottom), scroll to the new message
   if (!viewingOldMessages) {
     chatLog.scrollTop = chatLog.scrollHeight;
@@ -370,14 +463,22 @@ function handleMessageReceive(e) {
 }
 
 function markRead() {
-  if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-    chatSocket.send(
-      JSON.stringify({
-        type: "message_read",
-        data: {
-          // TODO: keeping it here for future
-        },
-      }),
-    );
+  // Debounce to prevent duplicate calls
+  if (markReadTimeout) {
+    clearTimeout(markReadTimeout);
   }
+  
+  markReadTimeout = setTimeout(() => {
+    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+      chatSocket.send(
+        JSON.stringify({
+          type: "message_read",
+          data: {
+            // TODO: keeping it here for future
+          },
+        }),
+      );
+    }
+    markReadTimeout = null;
+  }, 100); // 100ms debounce
 }

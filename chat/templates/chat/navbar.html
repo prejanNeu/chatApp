@@ -6,7 +6,7 @@
         <a href="{% url 'chat:index' %}" class="navbar-brand">ChatApp</a>
         
         <div class="navbar-links">
-            <a href="{% url 'chat:index' %}" class="nav-link {% if request.resolver_match.view_name == 'chat:index' %}active{% endif %}">
+            <a href="{% url 'chat:index' %}" class="nav-link {% if '/chat/' in request.path %}active{% endif %}">
                 Chats
                 {% if '/chat/' not in request.path %}
                     {% if unread_count > 0 %}
@@ -18,20 +18,57 @@
             </a>
             <a href="{% url 'friends:friend_list' %}" class="nav-link {% if 'friends' in request.path %}active{% endif %}">
                 Friends
-            </a>
-            <a href="{% url 'accounts:profile' %}" class="nav-link {% if 'profile' in request.path %}active{% endif %}">
-                Profile
+                <span class="unread-badge" style="margin-left: 5px; {% if pending_requests_count == 0 %}display: none;{% endif %}">{{ pending_requests_count }}</span>
             </a>
         </div>
 
         <div class="navbar-user">
-            {% if request.user.avatar %}
-                <img src="{{ request.user.avatar.url }}" alt="Avatar" class="user-avatar">
-            {% else %}
-                <div class="user-avatar-placeholder">{{ request.user.username|slice:":1"|upper }}</div>
-            {% endif %}
-            <span class="user-name">{{ request.user.full_name|default:request.user.username }}</span>
-            <a href="{% url 'accounts:logout' %}" class="btn-logout">Logout</a>
+            <button id="theme-toggle" class="btn-icon" style="margin-right: 10px;" title="Toggle Dark Mode">
+                <svg id="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <svg id="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+            <div class="user-menu">
+                <button class="user-menu-trigger">
+                    {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" alt="Avatar" class="user-avatar">
+                    {% else %}
+                        <div class="user-avatar-placeholder">{{ request.user.username|slice:":1"|upper }}</div>
+                    {% endif %}
+                    <span class="user-name">{{ request.user.full_name|default:request.user.username }}</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 5px;">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+                <div class="user-menu-dropdown">
+                    <a href="{% url 'accounts:profile' %}" class="user-menu-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Profile
+                    </a>
+                    <a href="{% url 'accounts:logout' %}" class="user-menu-item logout">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        Logout
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </nav>

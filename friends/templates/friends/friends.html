@@ -27,8 +27,8 @@
                     <span class="last-message">@{{ friend.username }}</span>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <a href="{% url 'friends:start_private_chat' friend.id %}" style="color: var(--primary-color); font-size: 0.9rem; text-decoration: none;">Message →</a>
-                    <a href="{% url 'friends:remove_friend' friend.id %}" style="color: #ef4444; font-size: 0.9rem; text-decoration: none;" onclick="event.stopPropagation(); return confirm('Are you sure you want to unfriend {{ friend.username }}?');">Unfriend</a>
+                    <a href="{% url 'friends:start_private_chat' friend.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem;">Message</a>
+                    <a href="{% url 'friends:remove_friend' friend.id %}" class="btn" style="background-color: #ef4444; color: white; padding: 6px 12px; font-size: 0.85rem;" onclick="event.stopPropagation(); return confirm('Are you sure you want to unfriend {{ friend.username }}?');">Unfriend</a>
                 </div>
               </li>
               {% empty %}

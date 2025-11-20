@@ -1,8 +1,10 @@
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
-from .models import ChatRoom, Message, MessageReadStatus
 from django.contrib import messages
+from django.db.models import Q, Count, Max
 from django.http import JsonResponse
+
+from .models import ChatRoom, Message, MessageReadStatus
 from .forms import MessageFileForm
 
 @login_required
@@ -54,14 +56,25 @@ def get_rooms_context(user):
     
     # Sort by last message timestamp descending
     room_data.sort(key=lambda x: x['last_message_timestamp'], reverse=True)
-    return room_data
+    
+    # Get pending friend request count
+    from friends.models import FriendRequest
+    pending_requests_count = FriendRequest.objects.filter(
+        to_user=user,
+        is_accepted=False
+    ).count()
+    
+    return {
+        'rooms': room_data,
+        'pending_requests_count': pending_requests_count
+    }
 
 
 @login_required
 def index(request):
     user = request.user
-    room_data = get_rooms_context(user)
-    return render(request, "chat/index.html", {"rooms": room_data})
+    context = get_rooms_context(user)
+    return render(request, "chat/index.html", context)
 
 
 @login_required
@@ -92,12 +105,30 @@ def room(request, room_name):
         other_user = private_chat.user_a if private_chat.user_b == request.user else private_chat.user_b
         display_name = other_user.full_name if other_user.full_name else other_user.username
 
-    return render(request, "chat/room.html", {
+    # Get the other user in the room
+    other_user = room.users.exclude(id=request.user.id).first()
+    
+    # Check if users are still friends
+    are_friends = False
+    if other_user:
+        from friends.models import FriendRequest
+        # Check if there's an accepted friend request between the two users
+        are_friends = FriendRequest.objects.filter(
+            Q(from_user=request.user, to_user=other_user, is_accepted=True) |
+            Q(from_user=other_user, to_user=request.user, is_accepted=True)
+        ).exists()
+    # Get other context data
+    other_context = get_rooms_context(request.user)
+    
+    context = {
         "room_name": room_name,
         "display_name": display_name,
         "chat_messages": messages_qs,
-        "rooms": room_data
-    })
+        "are_friends": are_friends,
+        "other_user": other_user,
+    }
+    context.update(other_context)
+    return render(request, "chat/room.html", context)
 
 
 @login_required

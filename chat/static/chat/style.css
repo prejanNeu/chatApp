@@ -11,6 +11,54 @@
     --message-received-bg: #f3f4f6;
     --message-received-text: #1f2937;
     --sidebar-width: 300px;
+    --hover-bg: #f3f4f6;
+    --active-bg: #eef2ff;
+}
+
+[data-theme="dark"] {
+    --bg-color: #111827;
+    --card-bg: #1f2937;
+    --text-color: #f9fafb;
+    --text-muted: #9ca3af;
+    --border-color: #374151;
+    --message-received-bg: #374151;
+    --message-received-text: #f9fafb;
+    --primary-color: #6366f1; /* Slightly lighter for dark mode */
+    --primary-hover: #818cf8;
+    --hover-bg: #374151;
+    --active-bg: #312e81;
+}
+
+/* Auto dark mode for system preference (for landing/auth pages) */
+@media (prefers-color-scheme: dark) {
+    body:not([data-theme]) {
+        --bg-color: #111827;
+        --card-bg: #1f2937;
+        --text-color: #f9fafb;
+        --text-muted: #9ca3af;
+        --border-color: #374151;
+        --message-received-bg: #374151;
+        --message-received-text: #f9fafb;
+        --primary-color: #6366f1;
+        --primary-hover: #818cf8;
+        --hover-bg: #374151;
+        --active-bg: #312e81;
+    }
+}
+
+/* Explicit light mode when toggled */
+[data-theme="light"] {
+    --bg-color: #f3f4f6;
+    --card-bg: #ffffff;
+    --text-color: #1f2937;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --message-sent-bg: #4f46e5;
+    --message-sent-text: #ffffff;
+    --message-received-bg: #f3f4f6;
+    --message-received-text: #1f2937;
+    --hover-bg: #f3f4f6;
+    --active-bg: #eef2ff;
 }
 
 * {
@@ -39,7 +87,7 @@ a:hover {
 
 /* Navbar */
 .navbar {
-    background-color: #fff;
+    background-color: var(--card-bg);
     border-bottom: 1px solid var(--border-color);
     height: 60px;
     display: flex;
@@ -80,7 +128,7 @@ a:hover {
 
 .nav-link:hover, .nav-link.active {
     color: var(--primary-color);
-    background-color: #eef2ff;
+    background-color: var(--active-bg);
     text-decoration: none;
 }
 
@@ -88,6 +136,82 @@ a:hover {
     display: flex;
     align-items: center;
     gap: 15px;
+}
+
+.user-menu {
+    position: relative;
+}
+
+.user-menu-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+    color: var(--text-color);
+}
+
+.user-menu-trigger:hover {
+    background-color: var(--hover-bg);
+}
+
+.user-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    min-width: 180px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s;
+    z-index: 1000;
+}
+
+.user-menu.active .user-menu-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: background-color 0.2s;
+    font-size: 0.9rem;
+}
+
+.user-menu-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.user-menu-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.user-menu-item:hover {
+    background-color: var(--hover-bg);
+    text-decoration: none;
+}
+
+.user-menu-item.logout {
+    color: #ef4444;
+    border-top: 1px solid var(--border-color);
+}
+
+.user-menu-item svg {
+    flex-shrink: 0;
 }
 
 .user-name {
@@ -176,17 +300,20 @@ a:hover {
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    background: #f9fafb;
+    background: var(--bg-color);
 }
 
 .sidebar-header {
-    padding: 20px;
+    padding: 15px 20px;
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     font-size: 1.1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    height: 60px;
 }
 
 .room-list {
@@ -206,12 +333,18 @@ a:hover {
 }
 
 .room-item:hover {
-    background-color: #f3f4f6;
+    background-color: var(--hover-bg);
+    color: var(--text-color);
 }
 
 .room-item.active {
-    background-color: #eef2ff;
+    background-color: var(--active-bg);
     border-left: 4px solid var(--primary-color);
+}
+
+.room-item.active .room-name {
+    color: var(--primary-color);
+    font-weight: 700;
 }
 
 .room-name {
@@ -290,7 +423,7 @@ a:hover {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: #fff;
+    background: var(--card-bg);
     min-height: 0; /* Fix for flex scrolling */
 }
 
@@ -300,19 +433,21 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
+    background: var(--card-bg);
+    height: 60px;
 }
 
 .chat-header h3 {
     font-size: 1.1rem;
     font-weight: 600;
+    margin: 0;
 }
 
 .chat-messages {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    background-color: #f9fafb;
+    background-color: var(--bg-color);
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -344,24 +479,55 @@ a:hover {
 }
 
 .message-sender {
-    font-size: 0.75rem;
-    margin-bottom: 4px;
-    opacity: 0.8;
-    font-weight: 600;
+    display: none; /* Hidden - visual separation is enough */
 }
 
 .message-time {
     font-size: 0.7rem;
-    margin-top: 4px;
-    opacity: 0.7;
+    margin-top: 6px;
+    opacity: 0.6;
     text-align: right;
+    font-style: italic;
+}
+
+.file-attachment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+[data-theme="dark"] .file-attachment {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.file-link {
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.9rem;
+    word-break: break-all;
+}
+
+.file-link:hover {
+    text-decoration: underline;
+}
+
+.message-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    margin-top: 4px;
+    display: block;
 }
 
 /* Input Area */
 .chat-input-area {
     padding: 20px;
     border-top: 1px solid var(--border-color);
-    background: #fff;
+    background: var(--card-bg);
     display: flex;
     gap: 10px;
     align-items: center;
@@ -375,6 +541,8 @@ a:hover {
     outline: none;
     font-size: 0.95rem;
     transition: border-color 0.2s;
+    background-color: var(--card-bg);
+    color: var(--text-color);
 }
 
 .chat-input:focus {
@@ -425,8 +593,33 @@ a:hover {
 }
 
 .btn-icon:hover {
-    background-color: #f3f4f6;
+    background-color: var(--hover-bg);
     color: var(--primary-color);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--bg-color);
 }
 
 /* Auth Pages */
@@ -463,6 +656,8 @@ a:hover {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     font-size: 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
 }
 
 .form-control:focus {
@@ -479,6 +674,21 @@ a:hover {
 }
 
 /* Responsive Design */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.overlay.active {
+    display: block;
+}
+
 @media (max-width: 768px) {
     .sidebar {
         position: fixed;
@@ -511,3 +721,101 @@ a:hover {
        For now, let's keep it simple: Sidebar is for Chats/Friends navigation. 
        Profile/Logout is in top right. */
 }
+
+/* Toast Notifications */
+.messages-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast-success {
+    border-left-color: #10b981;
+}
+
+.toast-error {
+    border-left-color: #ef4444;
+}
+
+.toast-warning {
+    border-left-color: #f59e0b;
+}
+
+.toast-info {
+    border-left-color: #3b82f6;
+}
+
+.toast-icon {
+    flex-shrink: 0;
+}
+
+.toast-success .toast-icon {
+    color: #10b981;
+}
+
+.toast-error .toast-icon {
+    color: #ef4444;
+}
+
+.toast-warning .toast-icon {
+    color: #f59e0b;
+}
+
+.toast-info .toast-icon {
+    color: #3b82f6;
+}
+
+.toast-content {
+    flex: 1;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.toast-close:hover {
+    background-color: var(--hover-bg);
+}
+
+.toast-close svg {
+    display: block;
+}
+

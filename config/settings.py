@@ -79,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'chat.context_processors.unread_count',
+                'chat.context_processors.friend_requests_count',
             ],
         },
     },
