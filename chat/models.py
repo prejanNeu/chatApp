@@ -22,10 +22,11 @@ class ChatRoom(models.Model):
 
 class Message(models.Model):
     user = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+        CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='messages')
     room = models.ForeignKey(
         ChatRoom, on_delete=models.CASCADE, related_name='messages')
-    content = models.TextField()
+    content = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to='chat_uploads/', null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     is_file = models.BooleanField(default=False)
@@ -38,10 +39,17 @@ class Message(models.Model):
     def __str__(self):
         return f"{self.user.username}: {self.content[:20]}"
 
+    @property
+    def is_image(self):
+        if not self.is_file or not self.content:
+            return False
+        ext = self.content.lower().split('.')[-1]
+        return ext in ['jpg', 'jpeg', 'png', 'gif', 'webp']
+
 
 class MessageReadStatus(models.Model):
-    user = models.ForeignKey(to=CustomUser, on_delete=models.CASCADE)
-    message = models.ForeignKey(to=Message, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=CustomUser, on_delete=models.CASCADE, related_name='read_receipts')
+    message = models.ForeignKey(to=Message, on_delete=models.CASCADE, related_name='read_receipts')
     is_read = models.BooleanField(default=False)
 
     read_at = models.DateTimeField(null=True, blank=True)

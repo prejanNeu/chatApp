@@ -1,49 +1,78 @@
 {% load static %}
 <!doctype html>
+<html lang="en">
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Chat Room</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Room</title>
+  <link rel="stylesheet" href="{% static 'chat/style.css' %}">
+</head>
 
+<body>
+  <div class="container">
+    <div class="chat-layout">
+      <!-- Sidebar (Hidden on mobile or simplified) -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <a href="{% url 'chat:index' %}">← Back</a>
+        </div>
+        <!-- We could duplicate the room list here if we passed it to the context,
+                     but for now let's just have a back button -->
+        <div style="padding: 20px; color: var(--text-muted); font-size: 0.9rem;">
+          <p>Active Chat: <strong>{{ room_name }}</strong></p>
+        </div>
+      </div>
 
-    <style>
-      #chat-log {
-        height: 300px;
-        width: 800px;
-        overflow-y: auto;
-        background: #f0f0f0; /* light background */
-        color: black;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-      }
-    </style>
+      <!-- Chat Area -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <h3>{{ room_name }}</h3> <!-- Ideally display name here -->
+        </div>
 
-  </head>
+        <div id="chat-log" class="chat-messages">
+          {% for msg in messages %}
+          <div class="message {% if msg.user == request.user %}sent{% else %}received{% endif %}"
+            data-time="{{ msg.timestamp|date:'c' }}">
+            <div class="message-sender">{{ msg.user.username }}</div>
+            <div class="message-content">
+              {% if msg.is_file %}
+                <a href="{{ msg.content }}" target="_blank" style="color: inherit; text-decoration: underline;">File
+                  Attachment</a>
+                {% if msg.is_image %}
+                  <br><img src="{{ msg.content }}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 5px;">
+                {% endif %}
+              {% else %}
+                {{ msg.content }}
+              {% endif %}
+            </div>
+            <!-- Time will be inserted by JS -->
+          </div>
+          {% empty %}
+            <p>No messages yet.</p>
+          {% endfor %}
+        </div>
 
-  <body>
-    <ul id="chat-log">
-      {% for msg in messages %}
+        <div class="chat-input-area">
+          <div class="file-input-wrapper">
+            <button class="btn-icon" onclick="document.getElementById('chat-file-input').click()">
+              📎
+            </button>
+            <input id="chat-file-input" type="file" style="display: none;" />
+          </div>
+          <span id="file-name-display" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 10px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+          <input id="chat-message-input" class="chat-input" type="text" placeholder="Type a message..." />
+          <button id="chat-message-submit" class="btn btn-primary">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      <li data-time="{{ msg.timestamp|date:'c' }}">
-        <strong>{{ msg.user.username }}</strong>: {{ msg.content }}
-      </li>
-      {% endfor %}
-    </ul>
+  {{ room_name|json_script:"room-name" }}
+  <script>
+    const my_id = {{ request.user.id }};
+  </script>
+  <script src="{% static 'chat/room.js' %}"></script>
+</body>
 
-    <input id="chat-message-input" type="text" size="100" /><br />
-    <input id="chat-message-submit" type="button" value="Send" />
-    {{ room_name|json_script:"room-name" }}
-
-    <script>
-        const my_id = {{request.user.id}}
-    </script>
-    <!--
-      The query parameter is just for forcing the browser to reload the script
-      and should be REMOVED IN PRODUCTION
-    -->
-    <script src="{% static 'chat/room.js' %}?{% now "U" %}"></script>
-
-  </body>
 </html>

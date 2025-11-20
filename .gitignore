@@ -2,3 +2,4 @@ __pycache__/
 pyrightconfig.json
 TODOS
 db.sqlite3
+media/*

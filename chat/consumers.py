@@ -43,6 +43,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             case "message":
 
                 message = text_data_json["data"]["message"]
+                is_file = text_data_json["data"].get("is_file", False)
                 user = self.user
                 room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
 
@@ -50,7 +51,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 msg = await sync_to_async(Message.objects.create)(
                     user=user,
                     room=room,
-                    content=message
+                    content=message,
+                    is_file=is_file
                 )
 
                 # Mark the message as unread by all users in the group
@@ -84,6 +86,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "type": "chat.message",
                         "data": {
                             "message": message,
+                            "is_file": msg.is_file,
                             "sender": serialize_user(user),
                             "timestamp": msg.timestamp.isoformat(),
                         }

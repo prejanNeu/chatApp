@@ -1,42 +1,64 @@
 {% load static %}
 <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Chat Rooms</title>
-  </head>
-  <body>
-    <h2>Your Chats</h2>
-    <ul>
-      {% for entry in rooms %}
-      <li data-room="{{ entry.room.room_id }}">
-        <a href="{% url 'chat:room' entry.room.name %}">
-          {{ entry.display_name }}
-        </a>
+<html lang="en">
 
-        {% if entry.last_message %}
-        <span class="last-message"
-          >- {{ entry.last_message.content|truncatechars:30 }}</span
-        >
-        {% endif %}
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <link rel="stylesheet" href="{% static 'chat/style.css' %}">
+</head>
 
-        <span
-          class="unread-badge"
-          style="
-          background: red;
-          color: white;
-          border-radius: 50%;
-          padding: 2px 8px;
-          "
-          >
-          {{ entry.unread_count }}
-        </span>
-      </li>
+<body>
+  <div class="container">
+    <div class="chat-layout">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <span>Chats</span>
+          <a href="{% url 'accounts:profile' %}" style="font-size: 0.9rem;">Profile</a>
+        </div>
+        <ul class="room-list">
+          {% for entry in rooms %}
+          <li class="room-item" data-room="{{ entry.room.room_id }}"
+            onclick="window.location.href='{% url 'chat:room' entry.room.name %}'">
+            <div style="flex: 1;">
+              <span class="room-name">{{ entry.display_name }}</span>
+              {% if entry.last_message %}
+              <span class="last-message">
+                {% if entry.last_message.user == request.user %}You: {% endif %}
+                {% if entry.last_message.is_file %}
+                Sent a file
+                {% else %}
+                {{ entry.last_message.content|truncatechars:30 }}
+                {% endif %}
+              </span>
+              {% else %}
+              <span class="last-message">No messages yet</span>
+              {% endif %}
+            </div>
+
+            <span class="unread-badge" style="{% if entry.unread_count == 0 %}display: none;{% endif %}">
+              {{ entry.unread_count }}
+            </span>
+          </li>
           {% empty %}
-          <li>No active chats.</li>
+          <li class="room-item">No active chats.</li>
           {% endfor %}
-    </ul>
+        </ul>
+      </div>
 
-    <script src="{% static 'chat/index.js' %}"></script>
-  </body>
+      <!-- Main Area (Empty State) -->
+      <div class="chat-area" style="justify-content: center; align-items: center; color: var(--text-muted);">
+        <div style="text-align: center;">
+          <h3>Welcome to Chat App</h3>
+          <p>Select a chat from the sidebar to start messaging.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{% static 'chat/index.js' %}"></script>
+</body>
+
 </html>

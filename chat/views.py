@@ -2,6 +2,8 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from .models import ChatRoom, Message, MessageReadStatus
 from django.contrib import messages
+from django.http import JsonResponse
+from .forms import MessageFileForm
 
 
 @login_required
@@ -52,9 +54,73 @@ def room(request, room_name):
         return redirect("chat:index")
 
     # TODO: Don't send all the messages at once
-    messages_qs = Message.objects.filter(room=room).select_related("user")
+    # Limit to last 20 messages
+    messages_qs = Message.objects.filter(room=room).select_related("user").order_by('-timestamp')[:20]
+    messages_qs = reversed(messages_qs) # Reverse to show oldest first in the template
 
     return render(request, "chat/room.html", {
         "room_name": room_name,
         "messages": messages_qs
     })
+
+
+@login_required
+def upload_file(request):
+    if request.method == 'POST':
+        form = MessageFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            # We don't save the message here, just the file.
+            # Actually, we need to save the file to get the URL.
+            # But the message object is created in the consumer.
+            # So we can save a temporary message or just save the file directly.
+            # Let's just save the file using the form but not commit to DB yet?
+            # No, FileField needs an instance or manual handling.
+            # Let's create a message with is_file=True but no room yet?
+            # Or better: Just handle file upload manually or use a separate model for attachments?
+            # For simplicity, let's use the Message model but we need a room.
+            # Wait, the plan said "Return the file URL".
+            # If we save the form, it creates a Message instance.
+            # We can delete it later or just use it.
+            # Let's try to just save the file.
+            
+            # Alternative: Just use FileSystemStorage for simplicity if we don't want a dummy message.
+            from django.core.files.storage import default_storage
+            from django.core.files.base import ContentFile
+            
+            file = request.FILES['file']
+            file_name = default_storage.save('chat_uploads/' + file.name, ContentFile(file.read()))
+            file_url = default_storage.url(file_name)
+            
+            return JsonResponse({'file_url': file_url})
+            
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+def get_messages(request, room_name):
+    try:
+        room = ChatRoom.objects.get(name=room_name)
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({'error': 'Room not found'}, status=404)
+
+    if request.user not in room.users.all():
+        return JsonResponse({'error': 'Not allowed'}, status=403)
+
+    offset = int(request.GET.get('offset', 0))
+    limit = 20
+
+    messages = Message.objects.filter(room=room).select_related('user').order_by('-timestamp')[offset:offset+limit]
+    
+    data = []
+    for msg in messages:
+        data.append({
+            'id': msg.id,
+            'sender': msg.user.username,
+            'content': msg.content,
+            'timestamp': msg.timestamp.isoformat(),
+            'is_file': msg.is_file,
+            'is_image': msg.is_image, # We added this property to the model
+            'is_me': msg.user == request.user
+        })
+    
+    return JsonResponse({'messages': data})
