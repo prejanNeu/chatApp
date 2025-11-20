@@ -5,6 +5,10 @@ from django.contrib import messages
 from django.http import JsonResponse
 from .forms import MessageFileForm
 
+@login_required
+def landing_page(request):
+    return redirect("/chat/")
+
 
 @login_required
 def index(request):
