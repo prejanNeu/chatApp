@@ -1,37 +1,21 @@
+{% extends 'chat/base.html' %}
 {% load static %}
-<!doctype html>
-<html lang="en">
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Room</title>
-  <link rel="stylesheet" href="{% static 'chat/style.css' %}">
-</head>
+{% block title %}Chat - {{ display_name }}{% endblock %}
 
-<body>
-  <div class="container">
+{% block content %}
     <div class="chat-layout">
-      <!-- Sidebar (Hidden on mobile or simplified) -->
-      <div class="sidebar">
-        <div class="sidebar-header">
-          <a href="{% url 'chat:index' %}">← Back</a>
-        </div>
-        <!-- We could duplicate the room list here if we passed it to the context,
-                     but for now let's just have a back button -->
-        <div style="padding: 20px; color: var(--text-muted); font-size: 0.9rem;">
-          <p>Active Chat: <strong>{{ room_name }}</strong></p>
-        </div>
-      </div>
+      <!-- Sidebar -->
+      {% include 'chat/partials/sidebar_chat.html' %}
 
       <!-- Chat Area -->
       <div class="chat-area">
         <div class="chat-header">
-          <h3>{{ room_name }}</h3> <!-- Ideally display name here -->
+          <h3>{{ display_name }}</h3>
         </div>
 
         <div id="chat-log" class="chat-messages">
-          {% for msg in messages %}
+          {% for msg in chat_messages %}
           <div class="message {% if msg.user == request.user %}sent{% else %}received{% endif %}"
             data-time="{{ msg.timestamp|date:'c' }}">
             <div class="message-sender">{{ msg.user.username }}</div>
@@ -53,7 +37,8 @@
           {% endfor %}
         </div>
 
-        <div class="chat-input-area">
+          <div id="typing-indicator" style="height: 20px; font-size: 0.8rem; color: var(--text-muted); padding-left: 10px; font-style: italic;"></div>
+          <div class="chat-input-area">
           <div class="file-input-wrapper">
             <button class="btn-icon" onclick="document.getElementById('chat-file-input').click()">
               📎
@@ -66,13 +51,14 @@
         </div>
       </div>
     </div>
-  </div>
+{% endblock %}
 
+{% block scripts %}
   {{ room_name|json_script:"room-name" }}
+  {{ room_name|json_script:"room-name" }}
+  {{ request.user.id|json_script:"user-id" }}
   <script>
-    const my_id = {{ request.user.id }};
+    const my_id = JSON.parse(document.getElementById('user-id').textContent);
   </script>
-  <script src="{% static 'chat/room.js' %}"></script>
-</body>
-
-</html>
+  <script src="{% static 'chat/room.js' %}?{% now 'U' %}"></script>
+{% endblock %}

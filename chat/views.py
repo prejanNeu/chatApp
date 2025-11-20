@@ -10,13 +10,16 @@ def landing_page(request):
     return redirect("/chat/")
 
 
-@login_required
-def index(request):
+def landing_view(request):
+    if request.user.is_authenticated:
+        return redirect("chat:index")
+    return render(request, "chat/landing.html")
 
-    user = request.user
+
+def get_rooms_context(user):
     rooms = user.chat_rooms.all()
-
     room_data = []
+    
     for room in rooms:
         last_message = room.messages.last()
         unread_count = MessageReadStatus.objects.filter(
@@ -27,20 +30,37 @@ def index(request):
 
         # Logic for dynamic display name
         display_name = room.display_name
+        is_online = False
+        other_user_id = None
         if hasattr(room, 'private_chat'):
             private_chat = room.private_chat
             other_user = private_chat.user_a if private_chat.user_b == user else private_chat.user_b
-            display_name = other_user.full_name or other_user.username
+            display_name = other_user.full_name if other_user.full_name else other_user.username
+            is_online = other_user.is_online
+            other_user_id = other_user.id
 
         room_data.append(
             {
                 'room': room,
                 'display_name': display_name,
+                'is_online': is_online,
+                'other_user_id': other_user_id,
                 'last_message': last_message,
-                'unread_count': unread_count
+                'unread_count': unread_count,
+                'last_message_timestamp': last_message.timestamp if last_message else room.created_at, # Fallback to room creation
+                'avatar_url': other_user.avatar.url if other_user and other_user.avatar else None
             }
         )
+    
+    # Sort by last message timestamp descending
+    room_data.sort(key=lambda x: x['last_message_timestamp'], reverse=True)
+    return room_data
 
+
+@login_required
+def index(request):
+    user = request.user
+    room_data = get_rooms_context(user)
     return render(request, "chat/index.html", {"rooms": room_data})
 
 
@@ -62,9 +82,21 @@ def room(request, room_name):
     messages_qs = Message.objects.filter(room=room).select_related("user").order_by('-timestamp')[:20]
     messages_qs = reversed(messages_qs) # Reverse to show oldest first in the template
 
+    # Get sidebar data
+    room_data = get_rooms_context(request.user)
+
+    # Calculate display name for the current room
+    display_name = room.display_name
+    if hasattr(room, 'private_chat'):
+        private_chat = room.private_chat
+        other_user = private_chat.user_a if private_chat.user_b == request.user else private_chat.user_b
+        display_name = other_user.full_name if other_user.full_name else other_user.username
+
     return render(request, "chat/room.html", {
         "room_name": room_name,
-        "messages": messages_qs
+        "display_name": display_name,
+        "chat_messages": messages_qs,
+        "rooms": room_data
     })
 
 

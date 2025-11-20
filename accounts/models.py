@@ -27,11 +27,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=100)
+    is_online = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
 
-    # profile = models.ImageField(upload_to='user_profile')
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     # flag for soft delete the customuser
     is_delete = models.BooleanField(default=False)
 

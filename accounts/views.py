@@ -16,6 +16,7 @@ def register(request):
         full_name = request.POST.get("fullname", "").strip()
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
+        avatar = request.FILES.get("avatar")
 
         # Validation
         if not all([username, email, full_name, password, password2]):
@@ -27,12 +28,16 @@ def register(request):
             return redirect("accounts:register")
 
         try:
-            CustomUser.objects.create_user(
+            user = CustomUser.objects.create_user(
                 username=username,
                 email=email,
                 full_name=full_name,
                 password=password
             )
+            
+            if avatar:
+                user.avatar = avatar
+                user.save()
             messages.success(
                 request, "Registration successful! Please log in.")
             return redirect("accounts:login")

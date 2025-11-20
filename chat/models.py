@@ -8,7 +8,7 @@ class ChatRoom(models.Model):
         primary_key=True,
         default=uuid.uuid4,
         editable=False)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     users = models.ManyToManyField(CustomUser, related_name="chat_rooms")
     display_name = models.CharField(max_length=255)
@@ -35,6 +35,9 @@ class Message(models.Model):
 
     class Meta:
         ordering = ['timestamp']
+        indexes = [
+            models.Index(fields=['timestamp']),
+        ]
 
     def __str__(self):
         return f"{self.user.username}: {self.content[:20]}"
@@ -75,7 +78,7 @@ class PrivateChat(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user_a", "user_b"], name="uniqe_private_chatters")
+                fields=["user_a", "user_b"], name="unique_private_chatters")
         ]
 
     def __str__(self):

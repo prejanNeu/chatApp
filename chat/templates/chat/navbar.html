@@ -1,0 +1,37 @@
+<nav class="navbar">
+    <div class="navbar-container">
+        <button class="menu-toggle" id="menu-toggle" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; margin-right: 10px;">
+            ☰
+        </button>
+        <a href="{% url 'chat:index' %}" class="navbar-brand">ChatApp</a>
+        
+        <div class="navbar-links">
+            <a href="{% url 'chat:index' %}" class="nav-link {% if request.resolver_match.view_name == 'chat:index' %}active{% endif %}">
+                Chats
+                {% if '/chat/' not in request.path %}
+                    {% if unread_count > 0 %}
+                        <span id="global-unread-badge" class="unread-badge" style="margin-left: 5px;">{{ unread_count }}</span>
+                    {% else %}
+                        <span id="global-unread-badge" class="unread-badge" style="margin-left: 5px; display: none;">0</span>
+                    {% endif %}
+                {% endif %}
+            </a>
+            <a href="{% url 'friends:friend_list' %}" class="nav-link {% if 'friends' in request.path %}active{% endif %}">
+                Friends
+            </a>
+            <a href="{% url 'accounts:profile' %}" class="nav-link {% if 'profile' in request.path %}active{% endif %}">
+                Profile
+            </a>
+        </div>
+
+        <div class="navbar-user">
+            {% if request.user.avatar %}
+                <img src="{{ request.user.avatar.url }}" alt="Avatar" class="user-avatar">
+            {% else %}
+                <div class="user-avatar-placeholder">{{ request.user.username|slice:":1"|upper }}</div>
+            {% endif %}
+            <span class="user-name">{{ request.user.full_name|default:request.user.username }}</span>
+            <a href="{% url 'accounts:logout' %}" class="btn-logout">Logout</a>
+        </div>
+    </div>
+</nav>

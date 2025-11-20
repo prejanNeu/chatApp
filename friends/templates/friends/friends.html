@@ -1,12 +1,44 @@
-<h2>Your Friends</h2>
-<ul>
-  {% for friend in friends %}
-  <li>
-    <a href="{% url 'friends:start_private_chat' friend.id %}">
-      {{ friend.full_name }}
-    </a>
-  </li>
-  {% empty %}
-  <li>You have no friends yet 😢</li>
-  {% endfor %}
-</ul>
+{% extends 'chat/base.html' %}
+{% load static %}
+
+{% block title %}Friends{% endblock %}
+
+{% block content %}
+    <div class="chat-layout">
+      <!-- Sidebar -->
+      <!-- Sidebar -->
+      {% include 'chat/partials/sidebar_menu.html' %}
+
+      <!-- Main Content -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <h3>Your Friends</h3>
+          <a href="{% url 'friends:search_friend' %}" class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8rem;">Find New Friends</a>
+        </div>
+        
+        <div class="chat-messages">
+            <ul class="room-list">
+              {% for friend in friends %}
+              <li class="room-item" onclick="window.location.href='{% url 'friends:start_private_chat' friend.id %}'">
+                <div class="room-info">
+                    <div class="room-header">
+                        <span class="room-name">{{ friend.full_name }}</span>
+                    </div>
+                    <span class="last-message">@{{ friend.username }}</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a href="{% url 'friends:start_private_chat' friend.id %}" style="color: var(--primary-color); font-size: 0.9rem; text-decoration: none;">Message →</a>
+                    <a href="{% url 'friends:remove_friend' friend.id %}" style="color: #ef4444; font-size: 0.9rem; text-decoration: none;" onclick="event.stopPropagation(); return confirm('Are you sure you want to unfriend {{ friend.username }}?');">Unfriend</a>
+                </div>
+              </li>
+              {% empty %}
+              <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <p>You have no friends yet 😢</p>
+                  <a href="{% url 'friends:search_friend' %}" style="color: var(--primary-color); margin-top: 10px; display: inline-block;">Find people to connect with</a>
+              </div>
+              {% endfor %}
+            </ul>
+        </div>
+      </div>
+    </div>
+{% endblock %}

@@ -26,6 +26,34 @@ fileInput.onchange = function() {
 };
 
 chatMessageInput.focus();
+
+let typingTimeout;
+chatMessageInput.onkeydown = function(e) {
+    // Only trigger for printable characters or Backspace, excluding modifiers
+    if (e.key !== "Enter" && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key.length === 1 || e.key === "Backspace")) {
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                'type': 'typing',
+                'data': {
+                    'is_typing': true
+                }
+            }));
+        }
+        
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+            if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+                chatSocket.send(JSON.stringify({
+                    'type': 'typing',
+                    'data': {
+                        'is_typing': false
+                    }
+                }));
+            }
+        }, 1000);
+    }
+};
+
 chatMessageInput.onkeyup = function (e) {
   if (e.key === "Enter") {
     // enter, return
@@ -61,13 +89,15 @@ chatMessageSubmit.onclick = function () {
       .then(data => {
         console.log("Upload data:", data);
         if (data.file_url) {
-          chatSocket.send(JSON.stringify({
-            'type': 'message',
-            'data': {
-              'message': data.file_url,
-              'is_file': true
-            }
-          }));
+          if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+              chatSocket.send(JSON.stringify({
+                'type': 'message',
+                'data': {
+                  'message': data.file_url,
+                  'is_file': true
+                }
+              }));
+          }
           fileInput.value = ''; // Clear input
           fileNameDisplay.textContent = ""; // Clear display
         } else {
@@ -78,13 +108,15 @@ chatMessageSubmit.onclick = function () {
   }
 
   if (message) {
-    chatSocket.send(JSON.stringify({
-      'type': 'message',
-      'data': {
-        'message': message,
-        'is_file': false
-      }
-    }));
+    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+        chatSocket.send(JSON.stringify({
+          'type': 'message',
+          'data': {
+            'message': message,
+            'is_file': false
+          }
+        }));
+    }
     messageInputDom.value = '';
   }
 };
@@ -111,22 +143,34 @@ let viewingOldMessages = false;
 
 // SOCKET
 const roomName = JSON.parse(document.getElementById("room-name").textContent);
+let chatSocket = null;
 
-const chatSocket = new WebSocket(
-  "ws://" + window.location.host + "/ws/chat/" + roomName + "/",
-);
+function connectChatSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    chatSocket = new WebSocket(
+        protocol + window.location.host + "/ws/chat/" + roomName + "/",
+    );
+
+    chatSocket.onmessage = handleMessageReceive;
+    
+    chatSocket.onclose = function(e) {
+        console.error("Chat socket closed unexpectedly. Reconnecting in 3 seconds...");
+        setTimeout(connectChatSocket, 3000);
+    };
+
+    chatSocket.onopen = function(e) {
+        console.log("Chat socket connected");
+    };
+}
+
+connectChatSocket();
+
 
 // Intersection Observer to mark messages as read when they become visible
 const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        // If the message is visible, mark it as read
-        // We assume the message element has a data-id attribute or similar, 
-        // but the current backend `mark_messages_as_read` marks ALL messages for the user in the room.
-        // So, if we are at the bottom or viewing new messages, we can just trigger the blanket "mark read".
-        // For granular per-message read receipts, the backend would need to accept message IDs.
-        // Based on current backend:
         if (!viewingOldMessages) {
           markRead();
         }
@@ -158,26 +202,50 @@ function fetchMessages() {
             }
 
             data.messages.forEach(msg => {
-                let messageContent = msg.content;
-                if (msg.is_file) {
-                    messageContent = `<a href="${msg.content}" target="_blank" style="color: inherit; text-decoration: underline;">File Attachment</a>`;
-                    if (msg.is_image) {
-                        messageContent += `<br><img src="${msg.content}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 5px;">`;
-                    }
-                }
+                // Safe construction of message element
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${msg.is_me ? 'sent' : 'received'}`;
+                
+                const senderDiv = document.createElement('div');
+                senderDiv.className = 'message-sender';
+                senderDiv.textContent = msg.sender;
+                msgDiv.appendChild(senderDiv);
 
-                const msgClass = msg.is_me ? 'sent' : 'received';
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                
+                if (msg.is_file) {
+                    const link = document.createElement('a');
+                    link.href = msg.content;
+                    link.target = '_blank';
+                    link.style.color = 'inherit';
+                    link.style.textDecoration = 'underline';
+                    link.textContent = 'File Attachment';
+                    contentDiv.appendChild(link);
+                    
+                    if (msg.is_image) {
+                        contentDiv.appendChild(document.createElement('br'));
+                        const img = document.createElement('img');
+                        img.src = msg.content;
+                        img.style.maxWidth = '200px';
+                        img.style.maxHeight = '200px';
+                        img.style.borderRadius = '8px';
+                        img.style.marginTop = '5px';
+                        contentDiv.appendChild(img);
+                    }
+                } else {
+                    contentDiv.textContent = msg.content;
+                }
+                msgDiv.appendChild(contentDiv);
+
                 const date = new Date(msg.timestamp);
                 const localTime = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = `(${localTime})`;
+                msgDiv.appendChild(timeDiv);
 
-                const messageHtml = `
-                    <div class="message ${msgClass}">
-                        <div class="message-sender">${msg.sender}</div>
-                        <div class="message-content">${messageContent}</div>
-                        <div class="message-time">(${localTime})</div>
-                    </div>
-                `;
-                chatLog.insertAdjacentHTML('afterbegin', messageHtml);
+                chatLog.insertAdjacentElement('afterbegin', msgDiv);
             });
 
             offset += data.messages.length;
@@ -218,40 +286,78 @@ function handleMessageReceive(e) {
 
   if (data.event === "user_join" || data.event === "user_leave") {
       const action = data.event === "user_join" ? "joined" : "left";
-      const systemMsg = `
-        <div style="text-align: center; margin: 10px 0; color: var(--text-muted); font-size: 0.8rem;">
-            ${data.username} ${action} the chat
-        </div>
-      `;
-      chatLog.insertAdjacentHTML('beforeend', systemMsg);
+      const systemMsg = document.createElement('div');
+      systemMsg.style.textAlign = 'center';
+      systemMsg.style.margin = '10px 0';
+      systemMsg.style.color = 'var(--text-muted)';
+      systemMsg.style.fontSize = '0.8rem';
+      systemMsg.textContent = `${data.username} ${action} the chat`;
+      
+      chatLog.appendChild(systemMsg);
+      
       if (!viewingOldMessages) {
           chatLog.scrollTop = chatLog.scrollHeight;
       }
       return;
   }
 
-  let messageContent = data.message;
-  if (data.is_file) {
-    messageContent = `<a href="${data.message}" target="_blank" style="color: inherit; text-decoration: underline;">File Attachment</a>`;
-    if (data.message.match(/\.(jpeg|jpg|gif|png)$/) != null) {
-      messageContent += `<br><img src="${data.message}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 5px;">`;
-    }
+  if (data.event === "typing") {
+      if (data.username === current_username) return; // Ignore own typing
+      
+      const typingIndicator = document.getElementById("typing-indicator");
+      if (data.is_typing) {
+          typingIndicator.textContent = `${data.username} is typing...`;
+      } else {
+          typingIndicator.textContent = "";
+      }
+      return;
   }
 
   const isMe = data.sender.id === my_id;
   const msgClass = isMe ? 'sent' : 'received';
 
-  const messageHtml = `
-    <div class="message ${msgClass}">
-        <div class="message-sender">${data.sender.username}</div>
-        <div class="message-content">${messageContent}</div>
-        <div class="message-time">Just now</div>
-    </div>
-  `;
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `message ${msgClass}`;
 
-  chatLog.insertAdjacentHTML('beforeend', messageHtml);
+  const senderDiv = document.createElement('div');
+  senderDiv.className = 'message-sender';
+  senderDiv.textContent = data.sender.username;
+  msgDiv.appendChild(senderDiv);
 
-  const newMsgElement = chatLog.lastElementChild;
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'message-content';
+
+  if (data.is_file) {
+      const link = document.createElement('a');
+      link.href = data.message;
+      link.target = '_blank';
+      link.style.color = 'inherit';
+      link.style.textDecoration = 'underline';
+      link.textContent = 'File Attachment';
+      contentDiv.appendChild(link);
+
+      if (data.message.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+          contentDiv.appendChild(document.createElement('br'));
+          const img = document.createElement('img');
+          img.src = data.message;
+          img.style.maxWidth = '200px';
+          img.style.maxHeight = '200px';
+          img.style.borderRadius = '8px';
+          img.style.marginTop = '5px';
+          contentDiv.appendChild(img);
+      }
+  } else {
+      // SAFE: using textContent prevents XSS
+      contentDiv.textContent = data.message;
+  }
+  msgDiv.appendChild(contentDiv);
+
+  const timeDiv = document.createElement('div');
+  timeDiv.className = 'message-time';
+  timeDiv.textContent = 'Just now';
+  msgDiv.appendChild(timeDiv);
+
+  chatLog.appendChild(msgDiv);
 
   // If we are not viewing old messages (i.e., we are at the bottom), scroll to the new message
   if (!viewingOldMessages) {
@@ -263,12 +369,8 @@ function handleMessageReceive(e) {
   }
 }
 
-function handleClose(e) {
-  console.error("Chat socket closed unexpectedly");
-}
-
 function markRead() {
-  if (chatSocket.readyState === WebSocket.OPEN) {
+  if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
     chatSocket.send(
       JSON.stringify({
         type: "message_read",
@@ -279,6 +381,3 @@ function markRead() {
     );
   }
 }
-
-chatSocket.onmessage = handleMessageReceive;
-chatSocket.onclose = handleClose;

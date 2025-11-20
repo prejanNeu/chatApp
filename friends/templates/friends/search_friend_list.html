@@ -1,76 +1,121 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Friend List</title>
-    <style>
-        .user-card {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 8px;
-        }
-        .status {
-            font-size: 14px;
-            color: #555;
-        }
-        .friend { color: green; }
-        .pending { color: orange; }
-        .not-friend { color: red; }
-        tr, td{
-        margin: 10px;
-        }
+{% extends 'chat/base.html' %}
+{% load static %}
 
-    </style>
-</head>
+{% block title %}Find Friends{% endblock %}
 
-<body>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+{% block extra_css %}
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <style>
+      /* DataTables Customization to match theme */
+      .dataTables_wrapper {
+          padding: 20px;
+          font-family: inherit;
+      }
+      table.dataTable {
+          border-collapse: collapse !important;
+          width: 100% !important;
+          border: none !important;
+      }
+      table.dataTable thead th {
+          border-bottom: 1px solid var(--border-color) !important;
+          color: var(--text-muted);
+          font-weight: 600;
+          text-align: left;
+          padding: 12px !important;
+      }
+      table.dataTable tbody td {
+          border-bottom: 1px solid var(--border-color) !important;
+          padding: 12px !important;
+          color: var(--text-color);
+      }
+      .dataTables_filter input {
+          border: 1px solid var(--border-color);
+          border-radius: 6px;
+          padding: 6px 10px;
+          margin-left: 10px;
+      }
+      .status-badge {
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 0.85rem;
+          font-weight: 500;
+      }
+      .status-friend { background-color: #d1fae5; color: #065f46; }
+      .status-pending { background-color: #fef3c7; color: #92400e; }
+      .action-btn {
+          color: var(--primary-color);
+          font-weight: 500;
+          font-size: 0.9rem;
+      }
+      .action-btn:hover { text-decoration: underline; }
+  </style>
+{% endblock %}
 
+{% block content %}
+    <div class="chat-layout">
+      <!-- Sidebar -->
+      <!-- Sidebar -->
+      {% include 'chat/partials/sidebar_menu.html' %}
 
-    <table border="1" cellpadding="5" cellspacing="3" class="datatable">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            
-        {% for item in adding %}
-        <tr>
-            <td>{{ item.user.username }}</td>
+      <!-- Main Content -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <h3>Find Friends</h3>
+        </div>
+        
+        <div class="chat-messages" style="padding: 0; background: #fff;">
+            <table class="datatable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status / Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for item in adding %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 500;">{{ item.user.username }}</div>
+                        {% if item.user.full_name %}
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">{{ item.user.full_name }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.friend %}
+                            <span class="status-badge status-friend">Friends</span>
+                        {% elif item.is_pending and item.requested %}
+                            <span class="status-badge status-pending">Request Sent</span>
+                        {% elif not item.is_pending and item.requested %}
+                            <a href="/friends/accept/{{item.request_id}}" class="action-btn">Accept Request</a>
+                        {% elif not item.requested %}
+                            <a href="/friends/add/{{item.user.id}}" class="action-btn">Add Friend</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+{% endblock %}
 
-
-
-            {% if item.friend %}
-                <td class="status friend">Friends</td>
-
-            {% elif item.is_pending and  item.requested %}
-                <td class="status pending">Pending</td>
-
-            {% elif  not item.is_pending and item.requested %}
-                <td>
-                    <a href="/friends/accept/{{item.request_id}}">Accept Request</a>
-                </td>
-
-            {%elif not item.requested %}
-            <td>
-                <a href="/friends/add/{{item.user.id}}">Add Friend</a>
-            </td>
-
-            {% endif %}
-            
-        {% endfor %}
-        </tr>
-        </tbody>
-    </table>
-<script>
-    $(document).ready(function () {
-        $('.datatable').DataTable();
-    });
-</script>
-
-</body>
-</html>
+{% block scripts %}
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script>
+      $(document).ready(function () {
+          $('.datatable').DataTable({
+              "paging": true,
+              "ordering": true,
+              "info": false,
+              "lengthChange": false,
+              "pageLength": 10,
+              "language": {
+                  "search": "",
+                  "searchPlaceholder": "Search users..."
+              }
+          });
+      });
+  </script>
+{% endblock %}

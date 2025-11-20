@@ -37,24 +37,137 @@ a:hover {
     text-decoration: underline;
 }
 
-/* Layout */
-.container {
+/* Navbar */
+.navbar {
+    background-color: #fff;
+    border-bottom: 1px solid var(--border-color);
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-container {
     max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-brand {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+}
+
+.navbar-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-link {
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--primary-color);
+    background-color: #eef2ff;
+    text-decoration: none;
+}
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-logout {
+    font-size: 0.85rem;
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.btn-logout:hover {
+    text-decoration: underline;
+}
+
+/* Layout */
+.main-container {
+    flex: 1;
+    max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
     padding: 20px;
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
+    height: calc(100vh - 60px); /* Subtract navbar height */
 }
 
 .chat-layout {
     display: flex;
-    height: calc(100vh - 80px);
+    flex: 1; /* Take remaining space */
     background: var(--card-bg);
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     overflow: hidden;
+    margin-bottom: 20px;
+}
+
+/* Avatar Styles */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.user-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+
+.user-avatar-placeholder-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 2rem;
+    margin-bottom: 10px;
 }
 
 /* Sidebar */
@@ -88,8 +201,8 @@ a:hover {
     cursor: pointer;
     transition: background-color 0.2s;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 12px; /* Use gap instead of margin on children */
 }
 
 .room-item:hover {
@@ -103,8 +216,15 @@ a:hover {
 
 .room-name {
     font-weight: 500;
-    display: block;
+    display: flex;
+    align-items: center;
     margin-bottom: 4px;
+    color: var(--text-color);
+}
+
+.room-info {
+    flex: 1; /* Take available space */
+    min-width: 0; /* Required for text-overflow to work in flex child */
 }
 
 .last-message {
@@ -113,7 +233,6 @@ a:hover {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 180px;
     display: block;
 }
 
@@ -124,6 +243,46 @@ a:hover {
     padding: 2px 8px;
     border-radius: 9999px;
     font-weight: 600;
+    flex-shrink: 0; /* Prevent badge from shrinking */
+}
+
+.online-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: 6px;
+    background-color: transparent;
+}
+
+.online-dot.online {
+    background-color: #2ecc71;
+}
+
+.online-dot.offline {
+    display: none;
+}
+
+.user-avatar-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.user-avatar-placeholder-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1rem;
+    flex-shrink: 0;
 }
 
 /* Chat Area */
@@ -132,6 +291,7 @@ a:hover {
     display: flex;
     flex-direction: column;
     background: #fff;
+    min-height: 0; /* Fix for flex scrolling */
 }
 
 .chat-header {
@@ -156,6 +316,7 @@ a:hover {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    min-height: 0; /* Fix for flex scrolling */
 }
 
 .message {
@@ -315,4 +476,38 @@ a:hover {
     text-align: center;
     font-size: 0.9rem;
     color: var(--text-muted);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 60px; /* Below navbar */
+        left: -100%;
+        width: 80%;
+        height: calc(100vh - 60px);
+        z-index: 1000;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .chat-layout {
+        position: relative;
+    }
+
+    .menu-toggle {
+        display: block !important;
+    }
+
+    .navbar-links {
+        display: none; /* Hide nav links on mobile for simplicity, or move to sidebar */
+    }
+    
+    /* If we want nav links in sidebar, we'd need to restructure. 
+       For now, let's keep it simple: Sidebar is for Chats/Friends navigation. 
+       Profile/Logout is in top right. */
 }

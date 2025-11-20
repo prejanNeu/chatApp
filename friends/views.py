@@ -75,6 +75,22 @@ def reject_friend_request(request, request_id):
 
 
 @login_required
+def remove_friend(request, friend_id):
+    friend = CustomUser.objects.get(id=friend_id)
+    
+    # Find the friend request that established this friendship
+    # It could be from user -> friend OR friend -> user
+    FriendRequest.objects.filter(
+        Q(from_user=request.user, to_user=friend) | 
+        Q(from_user=friend, to_user=request.user),
+        is_accepted=True
+    ).delete()
+    
+    messages.success(request, f"You have unfriended {friend.full_name or friend.username}.")
+    return redirect("friends:friend_list")
+
+
+@login_required
 def start_private_chat(request, friend_id):
     friend = CustomUser.objects.get(id=friend_id)
 
@@ -86,6 +102,14 @@ def start_private_chat(request, friend_id):
     # TODO: Maybe we can obfuscate the name better here
     # and have corresponding enforcement in the backend for truly private chats
     return redirect("chat:room", room_name=room.name)
+
+
+@login_required
+def cancel_friend_request(request, request_id):
+    friend_request = FriendRequest.objects.get(id=request_id, from_user=request.user)
+    friend_request.delete()
+    messages.info(request, "Friend request cancelled.")
+    return redirect("friends:friend_requests")
 
 
 

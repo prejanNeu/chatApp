@@ -22,7 +22,7 @@
     {% endfor %}
     {% endif %}
 
-    <form method="POST" action="">
+    <form method="POST" action="" enctype="multipart/form-data">
       {% csrf_token %}
       <div class="form-group">
         <label class="form-label">Username</label>
@@ -35,6 +35,10 @@
       <div class="form-group">
         <label class="form-label">Full Name</label>
         <input type="text" name="fullname" class="form-control" placeholder="Enter full name" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Avatar (Optional)</label>
+        <input type="file" name="avatar" class="form-control" accept="image/*" />
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>

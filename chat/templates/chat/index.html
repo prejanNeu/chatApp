@@ -1,64 +1,27 @@
+{% extends 'chat/base.html' %}
 {% load static %}
-<!doctype html>
-<html lang="en">
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat App</title>
-  <link rel="stylesheet" href="{% static 'chat/style.css' %}">
-</head>
+{% block title %}Chats{% endblock %}
 
-<body>
-  <div class="container">
+{% block content %}
     <div class="chat-layout">
       <!-- Sidebar -->
-      <div class="sidebar">
-        <div class="sidebar-header">
-          <span>Chats</span>
-          <a href="{% url 'accounts:profile' %}" style="font-size: 0.9rem;">Profile</a>
-        </div>
-        <ul class="room-list">
-          {% for entry in rooms %}
-          <li class="room-item" data-room="{{ entry.room.room_id }}"
-            onclick="window.location.href='{% url 'chat:room' entry.room.name %}'">
-            <div style="flex: 1;">
-              <span class="room-name">{{ entry.display_name }}</span>
-              {% if entry.last_message %}
-              <span class="last-message">
-                {% if entry.last_message.user == request.user %}You: {% endif %}
-                {% if entry.last_message.is_file %}
-                Sent a file
-                {% else %}
-                {{ entry.last_message.content|truncatechars:30 }}
-                {% endif %}
-              </span>
-              {% else %}
-              <span class="last-message">No messages yet</span>
-              {% endif %}
+      <!-- Sidebar -->
+      {% include 'chat/partials/sidebar_chat.html' %}
+
+      <!-- Main Content -->
+      <div class="chat-area">
+        <div class="chat-messages" style="display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; color: var(--text-muted);">
+            <div style="background: #eef2ff; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             </div>
-
-            <span class="unread-badge" style="{% if entry.unread_count == 0 %}display: none;{% endif %}">
-              {{ entry.unread_count }}
-            </span>
-          </li>
-          {% empty %}
-          <li class="room-item">No active chats.</li>
-          {% endfor %}
-        </ul>
-      </div>
-
-      <!-- Main Area (Empty State) -->
-      <div class="chat-area" style="justify-content: center; align-items: center; color: var(--text-muted);">
-        <div style="text-align: center;">
-          <h3>Welcome to Chat App</h3>
-          <p>Select a chat from the sidebar to start messaging.</p>
+            <h3 style="color: var(--text-color); margin-bottom: 10px;">Select a chat to start messaging</h3>
+            <p>Or find new friends to chat with!</p>
+            <a href="{% url 'friends:search_friend' %}" class="btn btn-primary" style="margin-top: 20px; text-decoration: none;">Find Friends</a>
         </div>
       </div>
     </div>
-  </div>
+{% endblock %}
 
-  <script src="{% static 'chat/index.js' %}"></script>
-</body>
-
-</html>
+{% block scripts %}
+{% endblock %}

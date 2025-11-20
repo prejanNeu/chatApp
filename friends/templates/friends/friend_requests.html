@@ -1,12 +1,62 @@
-<h2>Friend Requests</h2>
-<ul>
-  {% for req in incoming %}
-  <li>
-    {{ req.from_user.username }}
-    <a href="{% url 'friends:accept_friend_request' req.id %}">✅ Accept</a>
-    <a href="{% url 'friends:reject_friend_request' req.id %}">❌ Decline</a>
-  </li>
-  {% empty %}
-  <li>No pending requests.</li>
-  {% endfor %}
-</ul>
+{% extends 'chat/base.html' %}
+{% load static %}
+
+{% block title %}Friend Requests{% endblock %}
+
+{% block content %}
+    <div class="chat-layout">
+      <!-- Sidebar -->
+      <!-- Sidebar -->
+      {% include 'chat/partials/sidebar_menu.html' %}
+
+      <!-- Main Content -->
+      <div class="chat-area">
+        <div class="chat-header">
+          <h3>Friend Requests</h3>
+        </div>
+        
+        <div class="chat-messages">
+            <ul class="room-list">
+              {% for req in incoming %}
+              <li class="room-item" style="cursor: default;">
+                <div class="room-info">
+                    <div class="room-header">
+                        <span class="room-name">{{ req.from_user.username }}</span>
+                    </div>
+                    <span class="last-message">Wants to be your friend</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="{% url 'friends:accept_friend_request' req.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; background-color: #2ecc71;">Accept</a>
+                    <a href="{% url 'friends:reject_friend_request' req.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; background-color: #ef4444;">Decline</a>
+                </div>
+              </li>
+              {% empty %}
+              <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <p>No pending requests.</p>
+              </div>
+              {% endfor %}
+            </ul>
+
+            {% if outgoing %}
+            <h4 style="margin: 30px 0 15px 0; padding-left: 20px; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Sent Requests</h4>
+            <ul class="room-list">
+              {% for req in outgoing %}
+              <li class="room-item" style="cursor: default;">
+                <div class="room-info">
+                    <div class="room-header">
+                        <span class="room-name">{{ req.to_user.username }}</span>
+                    </div>
+                    <span class="last-message">Request pending</span>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="{% url 'friends:cancel_friend_request' req.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem; background-color: #9ca3af;">Cancel</a>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            </ul>
+        </div>
+      </div>
+    </div>
+{% endblock %}
