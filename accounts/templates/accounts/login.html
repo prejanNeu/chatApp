@@ -6,42 +6,70 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login | Chat App</title>
-  <link rel="stylesheet" href="{% static 'chat/style.css' %}">
+  <link rel="stylesheet" href="{% static 'chat/style.css' %}?v={{ version }}">
 </head>
 
 <body>
   <div class="auth-container">
-    <h2 class="auth-title">Login</h2>
-
-    {% if messages %}
-    {% for message in messages %}
-    <div
-      style="color: #ef4444; text-align: center; margin-bottom: 20px; padding: 10px; background: #fee2e2; border-radius: 6px;">
-      {{ message }}
-    </div>
-    {% endfor %}
-    {% endif %}
-
-    <form method="POST" action="">
-      {% csrf_token %}
-      <div class="form-group">
-        <label class="form-label">Username</label>
-        <input type="text" name="username" class="form-control" placeholder="Enter username" required />
+    <div class="auth-card">
+      <div class="auth-header">
+        <h2 class="auth-title">Welcome Back</h2>
+        <p class="auth-subtitle">Sign in to continue chatting</p>
       </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" placeholder="Enter password" required />
-      </div>
-      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
-        Login
-      </button>
-    </form>
 
-    <div class="auth-footer">
-      Don’t have an account?
-      <a href="{% url 'accounts:register' %}">Register</a>
+      {% if messages %}
+      <div class="messages-container">
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+          <div class="toast-icon">
+            {% if message.tags == 'success' %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            {% elif message.tags == 'error' %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            {% else %}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            {% endif %}
+          </div>
+          <div class="toast-content">{{ message }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="" class="auth-form">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" placeholder="Enter username" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" placeholder="Enter password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          Sign In
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Don’t have an account? <a href="{% url 'accounts:register' %}" class="link-primary">Create one</a></p>
+      </div>
     </div>
   </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(toast => {
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        });
+    });
+  </script>
 </body>
 
 </html>

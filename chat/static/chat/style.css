@@ -624,53 +624,114 @@ a:hover {
 
 /* Auth Pages */
 .auth-container {
-    max-width: 400px;
-    margin: 100px auto;
-    padding: 40px;
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 0 20px;
+    width: 100%;
+}
+
+.auth-card {
     background: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-radius: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    padding: 48px;
+    border: 1px solid var(--border-color);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 40px;
 }
 
 .auth-title {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 1.5rem;
+    font-size: 2rem;
+    font-weight: 800;
     color: var(--text-color);
+    margin-bottom: 12px;
+    letter-spacing: -0.025em;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+}
+
+.auth-subtitle {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    font-weight: 400;
+    line-height: 1.5;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
-.form-group label {
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-group.half {
+    flex: 1;
+}
+
+.form-label {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
     color: var(--text-color);
+    font-size: 0.9rem;
 }
 
 .form-control {
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 16px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 1rem;
-    background-color: var(--card-bg);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background-color: var(--bg-color);
     color: var(--text-color);
+    transition: all 0.2s;
 }
 
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    background-color: var(--card-bg);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.btn-block {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    margin-top: 10px;
 }
 
 .auth-footer {
-    margin-top: 20px;
+    margin-top: 24px;
     text-align: center;
     font-size: 0.9rem;
     color: var(--text-muted);
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.link-primary {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.link-primary:hover {
+    text-decoration: underline;
 }
 
 /* Responsive Design */
@@ -732,11 +793,12 @@ a:hover {
     flex-direction: column;
     gap: 10px;
     max-width: 400px;
+    pointer-events: none; /* Allow clicking through container */
 }
 
 .toast {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
     padding: 16px;
     background: var(--card-bg);
@@ -744,6 +806,8 @@ a:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-left: 4px solid;
     animation: slideIn 0.3s ease-out;
+    pointer-events: auto; /* Re-enable clicks on toasts */
+    max-width: 100%;
 }
 
 @keyframes slideIn {
@@ -775,6 +839,9 @@ a:hover {
 
 .toast-icon {
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    margin-top: 2px;
 }
 
 .toast-success .toast-icon {
@@ -798,6 +865,54 @@ a:hover {
     color: var(--text-color);
     font-size: 0.95rem;
     line-height: 1.5;
+}
+
+/* Custom File Upload */
+.file-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.file-input-hidden {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.file-upload-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background-color: var(--bg-color);
+    color: var(--text-muted);
+}
+
+.file-upload-label:hover {
+    border-color: var(--primary-color);
+    background-color: var(--active-bg);
+    color: var(--primary-color);
+}
+
+.icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+}
+
+#file-name {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .toast-close {

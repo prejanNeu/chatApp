@@ -21,7 +21,7 @@ function connectNotificationSocket() {
 
     notificationSocket.onmessage = function(e) {
         const data = JSON.parse(e.data);
-        console.log("Notification received:", data);
+
 
         if (data.event === "new_message") {
             // Update last message
@@ -71,17 +71,17 @@ function connectNotificationSocket() {
         } 
         // Friend request events
         else if (data.event === "friend_request_received") {
-            console.log("Friend request received from:", data.from_user);
+
             // Increment friend request badge
             updateFriendRequestBadge(1);
         }
         else if (data.event === "friend_request_cancelled") {
-            console.log("Friend request cancelled by:", data.from_user);
+
             // Decrement friend request badge when sender cancels
             updateFriendRequestBadge(-1);
         }
         else if (data.event === "friend_request_accepted" || data.event === "friend_request_rejected") {
-            console.log("Friend request", data.event, "by:", data.from_user);
+
             // These don't affect the current user's incoming request count
             // But we could show a toast notification if desired
         }
@@ -130,19 +130,19 @@ function connectNotificationSocket() {
     };
 
     notificationSocket.onclose = function(e) {
-        console.error("Notification socket closed unexpectedly. Reconnecting in 3 seconds...");
+
         setTimeout(connectNotificationSocket, 3000);
     };
     
     notificationSocket.onopen = function(e) {
-        console.log("Notification socket connected");
+
     };
 }
 
 // Helper function to update friend request badge
 // Helper function to update friend request badge
 function updateFriendRequestBadge(delta) {
-    console.log("Updating friend request badge by:", delta);
+
     
     // Update navbar badge(s)
     // Use querySelectorAll to handle potential duplicates or mobile/desktop versions
@@ -158,7 +158,7 @@ function updateFriendRequestBadge(delta) {
             newBadge.style.display = 'none'; // Start hidden
             newBadge.textContent = '0'; // Initialize with 0
             friendsLink.appendChild(newBadge);
-            // Re-query to include the new badge
+
             navbarBadges = [newBadge];
         }
     }
@@ -168,7 +168,7 @@ function updateFriendRequestBadge(delta) {
         currentCount += delta;
         if (currentCount < 0) currentCount = 0; // Prevent negative counts
         
-        console.log("Navbar badge count:", currentCount);
+
         
         // ALWAYS update text content, even if hidden
         badge.textContent = currentCount;
@@ -200,7 +200,7 @@ function updateFriendRequestBadge(delta) {
         currentCount += delta;
         if (currentCount < 0) currentCount = 0;
         
-        console.log("Sidebar badge count:", currentCount);
+
         
         // ALWAYS update text content
         sidebarBadge.textContent = currentCount;

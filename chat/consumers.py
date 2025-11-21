@@ -156,7 +156,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
 
             case _:
-                print("Unkown type")
+                print("Unknown type")
 
     # Receive message from room group
 

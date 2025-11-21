@@ -220,8 +220,6 @@ def search_users(request):
 
         elif user_id in received_reqs:
             fr = received_reqs[user_id]
-            print(user.username)
-            print(vars(fr))
             adding.append({
                 "request_id": fr.id,
                 "user": user,
@@ -238,12 +236,7 @@ def search_users(request):
                 "friend": False,
                 "is_pending": False,
                 "requested": False
-            })
-            
-            
-            # is_pending -->True  is not accepted by other 
-            # is_pending -->True  isnot accepted by current user 
-            # is_pending -->False  is accepted by current user 
+            }) 
             
     
             

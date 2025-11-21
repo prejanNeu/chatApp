@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
+from PIL import Image
 from .models import CustomUser
 
 
@@ -28,27 +29,44 @@ def register(request):
             return redirect("accounts:register")
 
         try:
-            user = CustomUser.objects.create_user(
-                username=username,
-                email=email,
-                full_name=full_name,
-                password=password
-            )
-            
-            if avatar:
-                user.avatar = avatar
-                user.save()
-            messages.success(
-                request, "Registration successful! Please log in.")
-            return redirect("accounts:login")
+            with transaction.atomic():
+                user = CustomUser.objects.create_user(
+                    username=username,
+                    email=email,
+                    full_name=full_name,
+                    password=password
+                )
+                
+                if avatar:
+                    # Robust image validation using Pillow
+                    try:
+                        img = Image.open(avatar)
+                        img.verify()  # Verify that it is, in fact, an image
+                    except (IOError, SyntaxError) as e:
+                        messages.error(request, "Uploaded file is not a valid image.")
+                        # Raise an exception to trigger rollback
+                        raise ValueError("Invalid image")
+
+                    # Reset file pointer after verify()
+                    avatar.seek(0)
+                    
+                    user.avatar = avatar
+                    user.save()
+
+                messages.success(
+                    request, "Registration successful! Please log in.")
+                return redirect("accounts:login")
 
         except IntegrityError as e:
             messages.error(request, "Username or email already exists.")
-            messages.error(request, f"{email} already exits?")
-            print(e)
+            return redirect("accounts:register")
+
+        except ValueError as e:
+            # Handled above (invalid image), just redirect
             return redirect("accounts:register")
 
         except Exception as e:
+            print(f"Registration error: {e}")
             messages.error(
                 request, "An error occurred during registration. Please try again.")
             return redirect("accounts:register")
@@ -92,3 +110,10 @@ def logout(request):
 @login_required
 def profile(request):
     return render(request, "accounts/profile.html")
+
+
+def account_index(request):
+    if request.user.is_authenticated:
+        return redirect("accounts:profile")
+    return redirect("accounts:login")
+

@@ -1,15 +1,11 @@
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Count, Max
+from django.db.models import Q
 from django.http import JsonResponse
 
 from .models import ChatRoom, Message, MessageReadStatus
 from .forms import MessageFileForm
-
-@login_required
-def landing_page(request):
-    return redirect("/chat/")
 
 
 def landing_view(request):
@@ -136,21 +132,7 @@ def upload_file(request):
     if request.method == 'POST':
         form = MessageFileForm(request.POST, request.FILES)
         if form.is_valid():
-            # We don't save the message here, just the file.
-            # Actually, we need to save the file to get the URL.
-            # But the message object is created in the consumer.
-            # So we can save a temporary message or just save the file directly.
-            # Let's just save the file using the form but not commit to DB yet?
-            # No, FileField needs an instance or manual handling.
-            # Let's create a message with is_file=True but no room yet?
-            # Or better: Just handle file upload manually or use a separate model for attachments?
-            # For simplicity, let's use the Message model but we need a room.
-            # Wait, the plan said "Return the file URL".
-            # If we save the form, it creates a Message instance.
-            # We can delete it later or just use it.
-            # Let's try to just save the file.
-            
-            # Alternative: Just use FileSystemStorage for simplicity if we don't want a dummy message.
+            # Just save the file using FileSystemStorage for simplicity
             from django.core.files.storage import default_storage
             from django.core.files.base import ContentFile
             

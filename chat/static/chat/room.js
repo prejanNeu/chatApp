@@ -72,7 +72,7 @@ chatMessageSubmit.onclick = function () {
   const message = messageInputDom.value;
   const file = fileInput.files[0];
 
-  console.log("Send clicked. Message:", message, "File:", file);
+
 
   if (file) {
     const formData = new FormData();
@@ -86,11 +86,11 @@ chatMessageSubmit.onclick = function () {
       }
     })
       .then(response => {
-          console.log("Upload response status:", response.status);
+
           return response.json();
       })
       .then(data => {
-        console.log("Upload data:", data);
+
         if (data.file_url) {
           if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
               chatSocket.send(JSON.stringify({
@@ -141,7 +141,7 @@ function getCookie(name) {
 
 chatLog.scrollTop = chatLog.scrollHeight;
 
-// TODO: add some scroll event to count unreads in the front end when viewing older messages
+
 let viewingOldMessages = false;
 let markReadTimeout = null;
 
@@ -158,12 +158,12 @@ function connectChatSocket() {
     chatSocket.onmessage = handleMessageReceive;
     
     chatSocket.onclose = function(e) {
-        console.error("Chat socket closed unexpectedly. Reconnecting in 3 seconds...");
+
         setTimeout(connectChatSocket, 3000);
     };
 
     chatSocket.onopen = function(e) {
-        console.log("Chat socket connected");
+
     };
 }
 
@@ -441,7 +441,9 @@ function handleMessageReceive(e) {
 
   const timeDiv = document.createElement('div');
   timeDiv.className = 'message-time';
-  timeDiv.textContent = 'Just now';
+  const date = new Date();
+  const localTime = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  timeDiv.textContent = localTime;
   msgDiv.appendChild(timeDiv);
 
   chatLog.appendChild(msgDiv);
@@ -474,7 +476,7 @@ function markRead() {
         JSON.stringify({
           type: "message_read",
           data: {
-            // TODO: keeping it here for future
+
           },
         }),
       );

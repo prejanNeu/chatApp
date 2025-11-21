@@ -23,3 +23,7 @@ def friend_requests_count(request):
         ).count()
         return {'pending_requests_count': pending_requests_count}
     return {'pending_requests_count': 0}
+
+
+def version(request):
+    return {'version': '1.2'}
