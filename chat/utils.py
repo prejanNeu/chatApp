@@ -53,3 +53,8 @@ def are_friends(user1, user2):
 def private_room_name(user1, user2):
     base = f"{min(user1.id, user2.id)}:{max(user1.id, user2.id)}"
     return hashlib.sha256(base.encode()).hexdigest()
+
+
+def group_room_name(room_id, admin_id):
+    base = f"group:{room_id}:{admin_id}"
+    return hashlib.sha256(base.encode()).hexdigest()

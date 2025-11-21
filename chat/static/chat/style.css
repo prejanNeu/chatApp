@@ -574,6 +574,16 @@ a:hover {
     display: inline-block;
 }
 
+#file-name-display {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-right: 10px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .file-input-wrapper input[type=file] {
     font-size: 100px;
     position: absolute;
@@ -806,21 +816,107 @@ a:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-left: 4px solid;
     animation: slideIn 0.3s ease-out;
-    pointer-events: auto; /* Re-enable clicks on toasts */
-    max-width: 100%;
+    pointer-events: auto; /* Enable clicking on toast */
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid; /* Restore the colored accent */
+    border-radius: 8px; /* Slightly sharper to match the border accent */
+    padding: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    align-items: flex-start;
+    gap: 12px;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; /* Smoother animation */
+    width: 100%;
 }
 
-@keyframes slideIn {
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: var(--card-bg);
+    padding: 24px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border-color);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
     from {
-        transform: translateX(100%);
         opacity: 0;
+        transform: translateY(20px);
     }
     to {
-        transform: translateX(0);
         opacity: 1;
+        transform: translateY(0);
     }
 }
 
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+/* Message Sender Name */
+.message-sender-name {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 600;
+    display: block;
+}
+
+/* Members List Modal specific */
+.members-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 10px;
+}
+
+.member-item:last-child {
+    border-bottom: none;
+}
+
+.member-role {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: var(--bg-color);
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+/* Toast Variants */
 .toast-success {
     border-left-color: #10b981;
 }
@@ -867,11 +963,25 @@ a:hover {
     line-height: 1.5;
 }
 
-/* Custom File Upload */
-.file-input-wrapper {
-    position: relative;
-    width: 100%;
+.toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.toast-close:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-color);
+}
+
 
 .file-input-hidden {
     position: absolute;
@@ -913,24 +1023,5 @@ a:hover {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.toast-close {
-    flex-shrink: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-muted);
-    padding: 4px;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-.toast-close:hover {
-    background-color: var(--hover-bg);
-}
-
-.toast-close svg {
-    display: block;
 }
 

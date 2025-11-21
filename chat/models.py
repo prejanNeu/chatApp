@@ -83,3 +83,17 @@ class PrivateChat(models.Model):
 
     def __str__(self):
         return f"PrivateChat: {self.user_a.id} <-> {self.user_b.id}"
+
+
+class GroupChat(models.Model):
+    room = models.OneToOneField(
+        ChatRoom, on_delete=models.CASCADE, related_name="group_chat")
+    name = models.CharField(max_length=255)
+    admin = models.ForeignKey(
+        CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='admin_groups')
+    icon = models.ImageField(upload_to='group_icons/', null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Group: {self.name}"

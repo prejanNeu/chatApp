@@ -62,6 +62,7 @@
         const current_username = "{{ request.user.username }}";
     </script>
     <script src="{% static 'chat/index.js' %}?{% now 'U' %}"></script>
+    {% include 'chat/modals/create_group.html' %}
     {% block scripts %}{% endblock %}
 </body>
 </html>

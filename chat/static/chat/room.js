@@ -367,6 +367,15 @@ function handleMessageReceive(e) {
   const msgDiv = document.createElement('div');
   msgDiv.className = `message ${msgClass}`;
 
+  // Add sender name for group chats if it's not me
+  if (typeof is_group !== 'undefined' && is_group && !isMe) {
+      const senderNameSpan = document.createElement('span');
+      senderNameSpan.className = 'message-sender-name';
+      // Use full_name if available, otherwise username
+      senderNameSpan.textContent = data.sender.full_name || data.sender.username;
+      msgDiv.appendChild(senderNameSpan);
+  }
+
   const contentDiv = document.createElement('div');
   contentDiv.className = 'message-content';
 

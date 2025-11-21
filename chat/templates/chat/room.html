@@ -13,12 +13,25 @@
       <div class="chat-area">
         <div class="chat-header">
           <h3>{{ display_name }}</h3>
+          {% if is_group %}
+            <button class="btn-icon" onclick="document.getElementById('membersModal').style.display='flex'" title="View Members">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </button>
+          {% endif %}
         </div>
 
         <div id="chat-log" class="chat-messages">
           {% for msg in chat_messages %}
           <div class="message {% if msg.user == request.user %}sent{% else %}received{% endif %}"
             data-time="{{ msg.timestamp|date:'c' }}">
+            {% if msg.user != request.user and is_group %}
+                <span class="message-sender-name">{{ msg.user.full_name|default:msg.user.username }}</span>
+            {% endif %}
             <div class="message-content">
               {% if msg.is_file %}
                 {% if msg.is_image %}
@@ -54,7 +67,7 @@
           <div id="typing-indicator" style="height: 20px; flex-shrink: 0; font-size: 0.8rem; color: var(--text-muted); padding-left: 10px; font-style: italic;">        </div>
 
         <!-- Chat Input -->
-        {% if are_friends %}
+        {% if are_friends or is_group %}
           <div class="chat-input-area">
           <div class="file-input-wrapper">
             <button class="btn-icon" onclick="document.getElementById('chat-file-input').click()">
@@ -64,7 +77,7 @@
             </button>
             <input id="chat-file-input" type="file" style="display: none;" />
           </div>
-          <span id="file-name-display" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 10px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+          <span id="file-name-display" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
           <input id="chat-message-input" class="chat-input" type="text" placeholder="Type a message..." />
           <button id="chat-message-submit" class="btn btn-primary">Send</button>
         </div>
@@ -88,10 +101,42 @@
 
 {% block scripts %}
   {{ room_name|json_script:"room-name" }}
-  {{ room_name|json_script:"room-name" }}
   {{ request.user.id|json_script:"user-id" }}
+  {{ is_group|json_script:"is-group" }}
   <script>
     const my_id = JSON.parse(document.getElementById('user-id').textContent);
+    const is_group = JSON.parse(document.getElementById('is-group').textContent);
   </script>
   <script src="{% static 'chat/room.js' %}?{% now 'U' %}"></script>
+
+  {% if is_group %}
+  <div id="membersModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Group Members</h3>
+        <button class="btn-icon" onclick="document.getElementById('membersModal').style.display='none'">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="members-list custom-scrollbar">
+        {% for member in room_members %}
+          <div class="member-item">
+            {% if member.avatar %}
+              <img src="{{ member.avatar.url }}" class="user-avatar">
+            {% else %}
+              <div class="user-avatar-placeholder">{{ member.username|slice:":1"|upper }}</div>
+            {% endif %}
+            <span class="member-name">{{ member.full_name|default:member.username }}</span>
+            {% if member == group_chat.admin %}
+              <span class="member-role">Admin</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 {% endblock %}
