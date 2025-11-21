@@ -67,6 +67,36 @@ chatMessageInput.onkeyup = function (e) {
   }
 };
 
+// Paste image support
+chatMessageInput.addEventListener('paste', async (e) => {
+    const items = e.clipboardData.items;
+    
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            e.preventDefault(); // Prevent default paste behavior
+            
+            const blob = items[i].getAsFile();
+            
+            // Create a new File object with a proper name
+            const fileName = 'pasted-image-' + Date.now() + '.png';
+            const file = new File([blob], fileName, { type: blob.type });
+            
+            // Create a DataTransfer object to set the file input
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+            
+            // Show file name
+            fileNameDisplay.textContent = `📷 ${fileName}`;
+            
+            // Focus back on input so user can add a message
+            chatMessageInput.focus();
+            
+            break; // Only handle first image
+        }
+    }
+});
+
 chatMessageSubmit.onclick = function () {
   const messageInputDom = document.querySelector("#chat-message-input");
   const message = messageInputDom.value;
