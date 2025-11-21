@@ -105,6 +105,40 @@ chatMessageSubmit.onclick = function () {
 
 
   if (file) {
+    // Frontend validation
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    const ALLOWED_TYPES = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 'text/plain',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/zip', 'application/x-zip-compressed',
+      'application/x-rar-compressed', 'application/x-7z-compressed'
+    ];
+
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      fileNameDisplay.textContent = `❌ File too large (${sizeMB}MB). Max: 10MB`;
+      fileNameDisplay.style.color = '#ef4444';
+      setTimeout(() => {
+        fileNameDisplay.textContent = "";
+        fileNameDisplay.style.color = "";
+      }, 4000);
+      return;
+    }
+
+    // Check file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      fileNameDisplay.textContent = `❌ File type not allowed`;
+      fileNameDisplay.style.color = '#ef4444';
+      setTimeout(() => {
+        fileNameDisplay.textContent = "";
+        fileNameDisplay.style.color = "";
+      }, 4000);
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', file);
 
@@ -133,11 +167,25 @@ chatMessageSubmit.onclick = function () {
           }
           fileInput.value = ''; // Clear input
           fileNameDisplay.textContent = ""; // Clear display
-        } else {
-            console.error("Upload failed:", data);
+        } else if (data.error) {
+            // Show backend error
+            fileNameDisplay.textContent = `❌ ${data.error}`;
+            fileNameDisplay.style.color = '#ef4444';
+            setTimeout(() => {
+              fileNameDisplay.textContent = "";
+              fileNameDisplay.style.color = "";
+            }, 4000);
         }
       })
-      .catch(error => console.error('Error:', error));
+      .catch(error => {
+        console.error('Error:', error);
+        fileNameDisplay.textContent = "❌ Upload failed";
+        fileNameDisplay.style.color = '#ef4444';
+        setTimeout(() => {
+          fileNameDisplay.textContent = "";
+          fileNameDisplay.style.color = "";
+        }, 4000);
+      });
   }
 
   if (message) {

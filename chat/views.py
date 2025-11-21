@@ -170,14 +170,42 @@ def room(request, room_name):
 
 @login_required
 def upload_file(request):
+    # File upload limits
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB in bytes
+    ALLOWED_TYPES = {
+        # Images
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        # Documents
+        'application/pdf', 'text/plain',
+        'application/msword',  # .doc
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  # .docx
+        # Archives
+        'application/zip', 'application/x-zip-compressed',
+        'application/x-rar-compressed', 'application/x-7z-compressed'
+    }
+    
     if request.method == 'POST':
         form = MessageFileForm(request.POST, request.FILES)
         if form.is_valid():
+            file = request.FILES['file']
+            
+            # Validate file size
+            if file.size > MAX_FILE_SIZE:
+                size_mb = file.size / (1024 * 1024)
+                return JsonResponse({
+                    'error': f'File too large ({size_mb:.1f}MB). Maximum size is 10MB.'
+                }, status=400)
+            
+            # Validate file type
+            if file.content_type not in ALLOWED_TYPES:
+                return JsonResponse({
+                    'error': f'File type not allowed. Allowed types: images, PDFs, documents, archives.'
+                }, status=400)
+            
             # Just save the file using FileSystemStorage for simplicity
             from django.core.files.storage import default_storage
             from django.core.files.base import ContentFile
             
-            file = request.FILES['file']
             file_name = default_storage.save('chat_uploads/' + file.name, ContentFile(file.read()))
             file_url = default_storage.url(file_name)
             
