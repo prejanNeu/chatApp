@@ -27,3 +27,10 @@ def friend_requests_count(request):
 
 def version(request):
     return {'version': '1.2'}
+
+
+def user_context(request):
+    """Add current user ID to context for frontend use"""
+    if request.user.is_authenticated:
+        return {'current_user_id': request.user.id}
+    return {'current_user_id': None}

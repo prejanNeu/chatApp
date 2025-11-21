@@ -85,23 +85,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     is_file=is_file
                 )
 
-                # Mark the message as unread by all users in the group
+                # Send message to room group
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "chat.message",
+                        "data": {
+                            "id": msg.id,
+                            "message": msg.content,
+                            "sender": serialize_user(msg.user),
+                            "timestamp": msg.timestamp.isoformat(),
+                            "is_file": msg.is_file
+                        }
+                    }
+                )
+
                 room_users = await sync_to_async(lambda: list(room.users.all()))()
                 for u in room_users:
-                    is_read = (u == user)
+                    # is_read = (u == user)
+                    # TODO: Maybe this should be false by default?
+                    is_read = False
                     await sync_to_async(MessageReadStatus.objects.create)(
                         user=u, message=msg, is_read=is_read
                     )
 
-                    # Broadcast Message Notification
+                    # Send notification to each user (including sender for sidebar update)
                     await self.channel_layer.group_send(
                         f"notification_{u.id}",
                         {
-
                             "type": "notify",
                             "data": {
                                 "event": "new_message",
                                 "from": msg.user.username,
+                                "from_user_id": msg.user.id,
                                 "from_full_name": msg.user.full_name or msg.user.username,
                                 "room_id": str(msg.room.room_id),
                                 "room_name": msg.room.name,
@@ -109,23 +125,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                                 "is_file": msg.is_file,
                                 "is_image": msg.is_image
                             }
-
                         }
                     )
 
-                # Send message to room group
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        "type": "chat.message",
-                        "data": {
-                            "message": message,
-                            "is_file": msg.is_file,
-                            "sender": serialize_user(user),
-                            "timestamp": msg.timestamp.isoformat(),
-                        }
-                    },
-                )
             case "message_read":
                 room = await sync_to_async(ChatRoom.objects.get)(name=self.room_name)
                 # all users currently in the room will send this "receipt" acknowledging that they've "read" the message
@@ -142,14 +144,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     }
                 )
 
-
-
             case "typing":
                 # Broadcast typing status to room group
                 await self.channel_layer.group_send(
                     self.room_group_name,
                     {
-                        "type": "chat_activity",
+                        "type": "chat.activity",
                         "data": {
                             "event": "typing",
                             "username": self.user.username,
@@ -174,6 +174,26 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(
             text_data=json.dumps(event["data"])
         )
+
+    async def group_update(self, event):
+        """Handle group management updates"""
+        await self.send(text_data=json.dumps(event['data']))
+
+    async def chat_message_edited(self, event):
+        """Handle message edit events"""
+        await self.send(text_data=json.dumps({
+            'event': 'message_edited',
+            'message_id': event['data']['message_id'],
+            'content': event['data']['content'],
+            'sender_id': event['data']['sender_id']
+        }))
+
+    async def chat_message_deleted(self, event):
+        """Handle message delete events"""
+        await self.send(text_data=json.dumps({
+            'event': 'message_deleted',
+            'message_id': event['data']['message_id']
+        }))
 
 
 @database_sync_to_async
@@ -214,6 +234,3 @@ def update_user_online_status(user, is_online):
                     }
                 )
                 notified_users.add(other_user.id)
-
-
-

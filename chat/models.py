@@ -28,6 +28,7 @@ class Message(models.Model):
     content = models.TextField(blank=True, null=True)
     file = models.FileField(upload_to='chat_uploads/', null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    edited_at = models.DateTimeField(null=True, blank=True)
 
     is_file = models.BooleanField(default=False)
     is_delete = models.BooleanField(default=False)
@@ -97,3 +98,11 @@ class GroupChat(models.Model):
 
     def __str__(self):
         return f"Group: {self.name}"
+    
+    def delete(self, *args, **kwargs):
+        """Override delete to also delete the associated ChatRoom and its messages"""
+        room = self.room
+        super().delete(*args, **kwargs)
+        # Delete the room (which will cascade to messages due to Message.room's on_delete=CASCADE)
+        if room:
+            room.delete()

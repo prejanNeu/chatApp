@@ -56,5 +56,10 @@ def private_room_name(user1, user2):
 
 
 def group_room_name(room_id, admin_id):
+    """Generate unique group room name using UUID if room_id not provided"""
+    import uuid
+    if room_id is None:
+        # Generate unique identifier for new groups
+        room_id = str(uuid.uuid4())
     base = f"group:{room_id}:{admin_id}"
     return hashlib.sha256(base.encode()).hexdigest()

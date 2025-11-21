@@ -81,6 +81,7 @@ TEMPLATES = [
                 'chat.context_processors.unread_count',
                 'chat.context_processors.friend_requests_count',
                 'chat.context_processors.version',
+                'chat.context_processors.user_context',
             ],
         },
     },
