@@ -27,9 +27,16 @@ function connectNotificationSocket() {
             // Update last message
             const lastMessage = document.getElementById(`last-message-${data.room_id}`);
             if (lastMessage) {
+                // Check if this is a group chat by looking at the room item
+                const roomItem = lastMessage.closest('.room-item');
+                const isGroup = roomItem && roomItem.querySelector('.group-avatar') !== null;
+                
                 let prefix = "";
                 if (typeof current_username !== 'undefined' && data.from === current_username) {
                     prefix = "You: ";
+                } else if (isGroup) {
+                    // Show sender name for group chats
+                    prefix = data.from_full_name + ": ";
                 }
                 
                 let content = data.content;

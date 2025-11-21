@@ -102,9 +102,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             "data": {
                                 "event": "new_message",
                                 "from": msg.user.username,
+                                "from_full_name": msg.user.full_name or msg.user.username,
                                 "room_id": str(msg.room.room_id),
                                 "room_name": msg.room.name,
-                                "content": msg.content
+                                "content": msg.content,
+                                "is_file": msg.is_file,
+                                "is_image": msg.is_image
                             }
 
                         }
