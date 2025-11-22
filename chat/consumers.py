@@ -1,5 +1,6 @@
 import json
 
+import asyncio
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -30,6 +31,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         # Broadcast user_join event
+        # Small delay to ensure connection is stable and allow disconnect events from
+        # previous sessions (e.g. refresh) to propagate first for debounce logic.
+        await asyncio.sleep(0.5)
         await self.channel_layer.group_send(
             self.room_group_name,
             {

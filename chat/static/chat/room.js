@@ -568,52 +568,48 @@ function handleMessageReceive(e) {
   console.table(data);
 
   if (data.event === "user_join" || data.event === "user_leave") {
-    // Track recent leave events to prevent duplicates
-    if (data.event === "user_leave") {
-      const leaveKey = `leave_${data.username}_${Date.now()}`;
-
-      // Check if we've seen this user leave recently (within 2 seconds)
-      if (window.recentLeaves) {
-        const recentLeave = window.recentLeaves.find(
-          (item) =>
-            item.username === data.username &&
-            Date.now() - item.timestamp < 2000,
-        );
-        if (recentLeave) {
-          return; // Skip duplicate leave message
-        }
-      } else {
-        window.recentLeaves = [];
-      }
-
-      // Add to recent leaves
-      window.recentLeaves.push({
-        username: data.username,
-        timestamp: Date.now(),
-      });
-
-      // Clean up old entries after 5 seconds
-      setTimeout(() => {
-        window.recentLeaves = window.recentLeaves.filter(
-          (item) => Date.now() - item.timestamp < 5000,
-        );
-      }, 5000);
+    // Initialize pending leaves tracker
+    if (!window.pendingLeaves) {
+      window.pendingLeaves = {};
     }
 
-    const action = data.event === "user_join" ? "joined" : "left";
+    if (data.event === "user_leave") {
+      // Delay leave message to check for immediate reconnect (reload)
+      window.pendingLeaves[data.username] = setTimeout(() => {
+        showSystemMessage(`${data.username} left the chat`);
+        delete window.pendingLeaves[data.username];
+      }, 2000); // 2 second grace period
+    } else {
+      // user_join
+      // Suppress join message for the user themselves
+      if (data.username === current_username) {
+          return;
+      }
+
+      if (window.pendingLeaves[data.username]) {
+        // User reconnected within grace period - cancel leave and suppress join
+        clearTimeout(window.pendingLeaves[data.username]);
+        delete window.pendingLeaves[data.username];
+        return;
+      }
+      showSystemMessage(`${data.username} joined the chat`);
+    }
+    return;
+  }
+
+  function showSystemMessage(text) {
     const systemMsg = document.createElement("div");
     systemMsg.style.textAlign = "center";
     systemMsg.style.margin = "10px 0";
     systemMsg.style.color = "var(--text-muted)";
     systemMsg.style.fontSize = "0.8rem";
-    systemMsg.textContent = `${data.username} ${action} the chat`;
+    systemMsg.textContent = text;
 
     chatLog.appendChild(systemMsg);
 
     if (!viewingOldMessages) {
       chatLog.scrollTop = chatLog.scrollHeight;
     }
-    return;
   }
 
   if (data.event === "typing") {
