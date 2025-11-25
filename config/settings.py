@@ -224,15 +224,19 @@ LOGGING = {
     },
 }
 
-# Add file logging only in production (when DEBUG=False)
+# Add file logging only in production (when DEBUG=False) if the logs directory is writable
 if not DEBUG:
-    LOGGING['handlers']['file'] = {
-        'class': 'logging.FileHandler',
-        'filename': LOGS_DIR / 'django.log',
-        'formatter': 'verbose',
-    }
-    LOGGING['loggers']['django']['handlers'].append('file')
-    LOGGING['loggers']['django.request']['handlers'].append('file')
+    try:
+        LOGGING['handlers']['file'] = {
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR / 'django.log',
+            'formatter': 'verbose',
+        }
+        LOGGING['loggers']['django']['handlers'].append('file')
+        LOGGING['loggers']['django.request']['handlers'].append('file')
+    except Exception:
+        # If file logging fails (e.g., permission issues), fall back to console only
+        pass
 
 # ==============================================================================
 # EMAIL CONFIGURATION
