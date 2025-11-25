@@ -543,6 +543,18 @@ a:hover {
     transition: border-color 0.2s;
     background-color: var(--card-bg);
     color: var(--text-color);
+    font-family: inherit;
+    resize: none;
+    min-height: 44px;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.4;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.chat-input::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
 }
 
 .chat-input:focus {
@@ -784,15 +796,19 @@ a:hover {
         display: block !important;
     }
 
+    /* Navbar spacing fixes */
+    .navbar {
+        padding: 0 12px;
+    }
+
     .navbar-links {
-        /* Keep nav links visible on mobile */
         display: flex;
-        gap: 10px;
+        gap: 6px;
     }
     
     .navbar-links .nav-link {
         font-size: 0.85rem;
-        padding: 6px 10px;
+        padding: 4px 8px;
     }
     
     .navbar-user .user-name {
@@ -800,7 +816,28 @@ a:hover {
     }
     
     .navbar-brand {
-        font-size: 1.1rem;
+        font-size: 1rem;
+    }
+
+    /* Chat message fixes */
+    .chat-messages {
+        padding: 12px;
+    }
+
+    .message {
+        max-width: 85%;
+        font-size: 0.9rem;
+    }
+
+    /* Chat input area fixes */
+    .chat-input-area {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .chat-input {
+        font-size: 0.9rem;
+        padding: 10px 14px;
     }
 }
 
@@ -1059,6 +1096,12 @@ a:hover {
     animation: fadeIn 0.2s ease;
 }
 
+/* Mobile: show actions when message has 'active' class (tap to toggle) */
+.message.active .message-actions {
+    display: flex;
+    animation: fadeIn 0.2s ease;
+}
+
 .btn-edit, .btn-delete {
     padding: 4px 6px;
     opacity: 0.7;
@@ -1174,12 +1217,18 @@ a:hover {
 /* Typing Indicator */
 .typing-bubble {
     background: var(--message-received-bg);
-    border-radius: 18px;
+    border-radius: 12px;
+    border-bottom-left-radius: 2px;
     padding: 10px 15px;
     display: inline-block;
     margin: 5px 0;
     max-width: 70%;
     align-self: flex-start;
+    opacity: 0.9;
+}
+
+#typing-indicator {
+    order: 9999; /* Push to end of flex container */
 }
 
 .typing-dots {

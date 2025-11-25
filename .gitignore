@@ -3,8 +3,13 @@ pyrightconfig.json
 TODOS
 db.sqlite3
 media/*
+!media/.gitkeep
+!media/chat_uploads/
+media/chat_uploads/*
+!media/chat_uploads/.gitkeep
 .venv/
 *.log
 *.md
 !README.md
 .env
+staticfiles/

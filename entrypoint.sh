@@ -63,6 +63,10 @@ echo "Redis is up!"
 # Django setup
 # ============================================
 
+echo "Creating media directories..."
+mkdir -p /app/media/chat_uploads
+chmod -R 755 /app/media
+
 echo "Running migrations..."
 python3 manage.py migrate --noinput
 

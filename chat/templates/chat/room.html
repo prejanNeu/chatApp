@@ -84,8 +84,6 @@
           {% endfor %}
         </div>
 
-          <div id="typing-indicator" style="min-height: 30px; flex-shrink: 0; padding: 10px 20px; background-color: var(--bg-color); display: none;"></div>
-
         <!-- Chat Input -->
         {% if are_friends or is_group %}
           <div class="chat-input-area">
@@ -98,7 +96,7 @@
             <input id="chat-file-input" type="file" style="display: none;" />
           </div>
           <span id="file-name-display" style="font-size: 0.8rem; color: var(--text-muted); margin-right: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
-          <input id="chat-message-input" class="chat-input" type="text" placeholder="Type a message..." />
+          <textarea id="chat-message-input" class="chat-input" rows="1" placeholder="Type a message..."></textarea>
           <button id="chat-message-submit" class="btn btn-primary">Send</button>
         </div>
         {% else %}

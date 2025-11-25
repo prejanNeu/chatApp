@@ -5,6 +5,25 @@ const chatMessageSubmit = document.querySelector("#chat-message-submit");
 const messageInputDom = document.querySelector("#chat-message-input");
 const chatLog = document.getElementById("chat-log");
 
+// Auto-resize textarea as user types
+if (chatMessageInput && chatMessageInput.tagName === 'TEXTAREA') {
+  function autoResize() {
+    this.style.height = 'auto';
+    this.style.height = this.scrollHeight + 'px';
+  }
+  
+  chatMessageInput.addEventListener('input', autoResize);
+  
+  // Reset height when message is sent
+  const originalSubmitClick = chatMessageSubmit.onclick;
+  chatMessageSubmit.onclick = function() {
+    if (originalSubmitClick) {
+      originalSubmitClick.call(this);
+    }
+    chatMessageInput.style.height = 'auto';
+  };
+}
+
 // Scroll to bottom on page load (after DOM is rendered)
 setTimeout(() => {
   chatLog.scrollTop = chatLog.scrollHeight;
@@ -35,6 +54,33 @@ messages.forEach((li) => {
     }
   }
 });
+
+// Mobile: tap to toggle message actions (edit/delete buttons)
+if (window.innerWidth <= 768) {
+  document.addEventListener('click', function(e) {
+    const message = e.target.closest('.message.sent');
+    
+    if (message && message.querySelector('.message-actions')) {
+      // Clicked on a sent message with actions
+      const wasActive = message.classList.contains('active');
+      
+      // Remove active class from all messages
+      document.querySelectorAll('.message.active').forEach(m => {
+        m.classList.remove('active');
+      });
+      
+      // Toggle active class on clicked message (unless it was already active)
+      if (!wasActive) {
+        message.classList.add('active');
+      }
+    } else if (!e.target.closest('.message-actions')) {
+      // Clicked outside message actions - hide all
+      document.querySelectorAll('.message.active').forEach(m => {
+        m.classList.remove('active');
+      });
+    }
+  });
+}
 
 const fileNameDisplay = document.querySelector("#file-name-display");
 const fileInput = document.querySelector("#chat-file-input");
@@ -138,6 +184,7 @@ function deleteGroup(roomId) {
 chatMessageInput.focus();
 
 let typingTimeout;
+
 chatMessageInput.onkeydown = function (e) {
   // Only trigger for printable characters or Backspace, excluding modifiers
   if (
@@ -172,14 +219,18 @@ chatMessageInput.onkeydown = function (e) {
       }
     }, 1000);
   }
-};
-
-chatMessageInput.onkeyup = function (e) {
+  
+  // Handle Enter key
   if (e.key === "Enter") {
-    // enter, return
-    // Allow sending if text is present OR if a file is selected
-    if (chatMessageInput.value.trim() || fileInput.files.length > 0) {
-      chatMessageSubmit.click();
+    // On desktop (non-mobile), prevent default and send message
+    // On mobile, allow Shift+Enter for newline, plain Enter sends
+    const isMobile = window.innerWidth <= 768;
+    
+    if (!isMobile || !e.shiftKey) {
+      e.preventDefault();
+      if (chatMessageInput.value.trim() || fileInput.files.length > 0) {
+        chatMessageSubmit.click();
+      }
     }
   }
 };
@@ -615,33 +666,49 @@ function handleMessageReceive(e) {
   if (data.event === "typing") {
     if (data.username === current_username) return; // Ignore own typing
 
-    const typingIndicator = document.getElementById("typing-indicator");
+    let typingIndicator = document.getElementById("typing-indicator");
 
-    if (typingIndicator) {
+    if (data.is_typing) {
       // Clear any existing timeout
       if (window.typingDisplayTimeout) {
         clearTimeout(window.typingDisplayTimeout);
       }
 
-      if (data.is_typing) {
-        // Only update if not already showing
-        if (typingIndicator.style.display !== "block") {
-          typingIndicator.innerHTML = `
-                      <div class="typing-bubble">
-                          <div class="typing-dots">
-                              <span></span><span></span><span></span>
-                          </div>
-                      </div>
-                  `;
-          typingIndicator.style.display = "block";
+      // Only update if not already showing
+      if (!typingIndicator || typingIndicator.style.display !== "block") {
+        // Remove existing typing indicator if present
+        if (typingIndicator) {
+          typingIndicator.remove();
         }
-      } else {
-        // Delay hiding to prevent flicker
-        window.typingDisplayTimeout = setTimeout(() => {
-          typingIndicator.innerHTML = "";
-          typingIndicator.style.display = "none";
-        }, 300);
+        
+        // Create new typing indicator
+        typingIndicator = document.createElement("div");
+        typingIndicator.id = "typing-indicator";
+        typingIndicator.style.display = "block";
+        typingIndicator.style.padding = "10px 0";
+        typingIndicator.innerHTML = `
+          <div class="typing-bubble">
+            <div class="typing-dots">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        `;
+        
+        // Append to end of chat log (after all messages)
+        chatLog.appendChild(typingIndicator);
+        
+        // Scroll to bottom to show typing indicator if user is near bottom
+        if (!viewingOldMessages) {
+          chatLog.scrollTop = chatLog.scrollHeight;
+        }
       }
+    } else {
+      // Delay hiding to prevent flicker
+      window.typingDisplayTimeout = setTimeout(() => {
+        if (typingIndicator) {
+          typingIndicator.remove();
+        }
+      }, 300);
     }
     return;
   }
