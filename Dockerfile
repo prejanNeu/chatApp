@@ -33,6 +33,5 @@ RUN chmod +x /app/entrypoint.sh
 # Expose port 8000 (default, Railway will override with PORT env var)
 EXPOSE 8000
 
-# Run entrypoint script with daphne command
-# Use shell to properly expand PORT variable
-CMD ["/bin/bash", "-c", "/app/entrypoint.sh daphne -b 0.0.0.0 -p ${PORT:-8000} config.asgi:application"]
+# Run entrypoint script (it will start daphne with proper PORT)
+CMD ["/app/entrypoint.sh"]

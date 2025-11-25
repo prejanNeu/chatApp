@@ -34,4 +34,6 @@ echo "Starting server..."
 # Use PORT environment variable if set (Railway), otherwise default to 8000
 PORT=${PORT:-8000}
 echo "Binding to 0.0.0.0:$PORT"
-exec "$@"
+
+# Start daphne directly with the PORT variable
+exec daphne -b 0.0.0.0 -p $PORT config.asgi:application
