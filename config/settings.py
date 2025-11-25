@@ -224,19 +224,7 @@ LOGGING = {
     },
 }
 
-# Add file logging only in production (when DEBUG=False) if the logs directory is writable
-if not DEBUG:
-    try:
-        LOGGING['handlers']['file'] = {
-            'class': 'logging.FileHandler',
-            'filename': LOGS_DIR / 'django.log',
-            'formatter': 'verbose',
-        }
-        LOGGING['loggers']['django']['handlers'].append('file')
-        LOGGING['loggers']['django.request']['handlers'].append('file')
-    except Exception:
-        # If file logging fails (e.g., permission issues), fall back to console only
-        pass
+# File logging disabled in production to avoid permission issues on Railway (console logging is sufficient)
 
 # ==============================================================================
 # EMAIL CONFIGURATION
