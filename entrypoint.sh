@@ -1,39 +1,79 @@
 #!/bin/bash
-
-# Exit on error
 set -e
 
-echo "Waiting for Redis..."
-python << END
-import socket
-import time
-import os
+echo "Starting entrypoint…"
 
-redis_host = os.environ.get('REDIS_HOST', 'redis')
-redis_port = int(os.environ.get('REDIS_PORT', 6379))
+# ============================================
+# Parse Redis config
+# ============================================
+
+if [ -n "$REDIS_URL" ]; then
+    echo "Using REDIS_URL from environment..."
+
+    redis_host=$(python3 - << END
+import os
+from urllib.parse import urlparse
+u = urlparse(os.environ["REDIS_URL"])
+print(u.hostname)
+END
+)
+
+    redis_port=$(python3 - << END
+import os
+from urllib.parse import urlparse
+u = urlparse(os.environ["REDIS_URL"])
+print(u.port)
+END
+)
+else
+    echo "Using REDIS_HOST + REDIS_PORT fallback..."
+    redis_host=${REDIS_HOST:-redis}
+    redis_port=${REDIS_PORT:-6379}
+fi
+
+echo "Redis host: $redis_host"
+echo "Redis port: $redis_port"
+
+# ============================================
+# Wait for Redis
+# ============================================
+
+echo "Waiting for Redis…"
+
+python3 << END
+import socket, time, sys, os
+
+host = "$redis_host"
+port = int("$redis_port")
 
 while True:
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(1)
-        sock.connect((redis_host, redis_port))
-        sock.close()
+        s = socket.socket()
+        s.settimeout(1)
+        s.connect((host, port))
+        s.close()
         break
-    except:
-        time.sleep(0.1)
+    except Exception:
+        time.sleep(0.2)
 END
-echo "Redis started"
 
-echo "Running database migrations..."
-python manage.py migrate --noinput
+echo "Redis is up!"
+
+# ============================================
+# Django setup
+# ============================================
+
+echo "Running migrations..."
+python3 manage.py migrate --noinput
 
 echo "Collecting static files..."
-python manage.py collectstatic --noinput --clear
+python3 manage.py collectstatic --noinput --clear
 
-echo "Starting server..."
-# Use PORT environment variable if set (Railway), otherwise default to 8000
+# ============================================
+# Start Daphne
+# ============================================
+
 PORT=${PORT:-8000}
-echo "Binding to 0.0.0.0:$PORT"
+echo "Starting Daphne on port $PORT..."
 
-# Start daphne directly with the PORT variable
-exec daphne -b 0.0.0.0 -p $PORT config.asgi:application
+exec daphne -b 0.0.0.0 -p "$PORT" config.asgi:application
