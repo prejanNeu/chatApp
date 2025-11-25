@@ -14,13 +14,13 @@
           <h3>My Profile</h3>
         </div>
         
-        <div class="chat-messages" style="align-items: center; justify-content: center;">
-            <div class="auth-container" style="margin: 0; width: 100%; max-width: 500px;">
-                <div style="text-align: center; margin-bottom: 20px;">
+        <div class="chat-messages flex-center">
+            <div class="auth-container mw-500" style="margin: 0;">
+                <div class="text-center mb-2">
                     {% if user.avatar %}
-                        <img src="{{ user.avatar.url }}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                        <img src="{{ user.avatar.url }}" alt="Avatar" class="avatar-profile">
                     {% else %}
-                        <div style="width: 100px; height: 100px; border-radius: 50%; background-color: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto;">
+                        <div class="avatar-profile-placeholder">
                             {{ user.username|slice:":1"|upper }}
                         </div>
                     {% endif %}

@@ -12,7 +12,7 @@
                 <div class="room-info">
                     <span class="room-name">Friend Requests</span>
                 </div>
-                <span class="unread-badge" style="{% if pending_requests_count == 0 %}display: none;{% endif %}">{{ pending_requests_count }}</span>
+                <span class="unread-badge {% if pending_requests_count == 0 %}d-none{% endif %}">{{ pending_requests_count }}</span>
             </li>
             <li class="room-item {% if 'search' in request.path %}active{% endif %}" onclick="window.location.href='{% url 'friends:search_friend' %}'">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>

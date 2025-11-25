@@ -10,13 +10,13 @@
 
       <!-- Main Content -->
       <div class="chat-area">
-        <div class="chat-messages" style="display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; color: var(--text-muted);">
-            <div style="background: #eef2ff; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-color);"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <div class="chat-messages empty-state">
+            <div class="empty-state-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             </div>
-            <h3 style="color: var(--text-color); margin-bottom: 10px;">Select a chat to start messaging</h3>
+            <h3 class="mb-2" style="color: var(--text-color);">Select a chat to start messaging</h3>
             <p>Or find new friends to chat with!</p>
-            <a href="{% url 'friends:search_friend' %}" class="btn btn-primary" style="margin-top: 20px; text-decoration: none;">Find Friends</a>
+            <a href="{% url 'friends:search_friend' %}" class="btn btn-primary mt-2" style="text-decoration: none;">Find Friends</a>
         </div>
       </div>
     </div>

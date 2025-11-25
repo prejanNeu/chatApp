@@ -26,15 +26,15 @@
                     </div>
                     <span class="last-message">@{{ friend.username }}</span>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="flex-center gap-2">
                     <a href="{% url 'friends:start_private_chat' friend.id %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem;">Message</a>
-                    <a href="{% url 'friends:remove_friend' friend.id %}" class="btn" style="background-color: #ef4444; color: white; padding: 6px 12px; font-size: 0.85rem;" onclick="event.stopPropagation(); return confirm('Are you sure you want to unfriend {{ friend.username }}?');">Unfriend</a>
+                    <a href="{% url 'friends:remove_friend' friend.id %}" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.85rem;" onclick="event.stopPropagation(); return confirm('Are you sure you want to unfriend {{ friend.username }}?');">Unfriend</a>
                 </div>
               </li>
               {% empty %}
-              <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <div class="empty-state">
                   <p>You have no friends yet 😢</p>
-                  <a href="{% url 'friends:search_friend' %}" style="color: var(--primary-color); margin-top: 10px; display: inline-block;">Find people to connect with</a>
+                  <a href="{% url 'friends:search_friend' %}" class="mt-2" style="color: var(--primary-color);">Find people to connect with</a>
               </div>
               {% endfor %}
             </ul>
