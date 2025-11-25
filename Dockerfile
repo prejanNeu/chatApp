@@ -30,8 +30,9 @@ RUN mkdir -p /app/staticfiles /app/media
 # Make entrypoint script executable
 RUN chmod +x /app/entrypoint.sh
 
-# Expose port 8000
+# Expose port 8000 (default, Railway will override with PORT env var)
 EXPOSE 8000
 
-# Run entrypoint script
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Run entrypoint script with daphne command
+# Use shell form to allow PORT variable substitution
+CMD /app/entrypoint.sh daphne -b 0.0.0.0 -p ${PORT:-8000} config.asgi:application

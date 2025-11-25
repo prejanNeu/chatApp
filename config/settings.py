@@ -187,7 +187,6 @@ CONN_MAX_AGE = 600 if not DEBUG else 0  # 10 minutes in production
 # ==============================================================================
 
 # Ensure logs directory exists
-import os
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
 

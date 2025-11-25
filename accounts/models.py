@@ -3,24 +3,30 @@ from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, Permis
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email, full_name, password=None):
+    def create_user(self, username, email, password=None, **extra_fields):
         if not email:
             raise ValueError("Users must have an email address")
         if not username:
             raise ValueError("Users must have a username")
 
         email = self.normalize_email(email)
-        user = self.model(username=username, full_name=full_name, email=email)
+        extra_fields.setdefault('full_name', username)  # Default full_name to username if not provided
+        user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, full_name, password=None):
-        user = self.create_user(username, email, full_name, password)
-        user.is_staff = True
-        user.is_superuser = True
-        user.save(using=self._db)
-        return user
+    def create_superuser(self, username, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('full_name', username)  # Default full_name to username
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(username, email, password, **extra_fields)
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
@@ -37,7 +43,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_delete = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['full_name']
+    REQUIRED_FIELDS = ['email']  # Changed from ['full_name'] since full_name has a default
 
     objects = CustomUserManager()
 
