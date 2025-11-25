@@ -224,8 +224,6 @@ LOGGING = {
     },
 }
 
-# File logging disabled in production to avoid permission issues on Railway (console logging is sufficient)
-
 # ==============================================================================
 # EMAIL CONFIGURATION
 # ==============================================================================
