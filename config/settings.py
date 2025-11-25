@@ -263,12 +263,9 @@ MANAGERS = ADMINS
 
 if not DEBUG:
     CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-            'LOCATION': f"redis://{os.environ.get('REDIS_HOST', '127.0.0.1')}:{os.environ.get('REDIS_PORT', 6379)}/1",
-            'OPTIONS': {
-                'CLIENT_CLASS': 'django.core.cache.backends.redis.RedisClient',
-            }
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": f"redis://{os.environ.get('REDIS_HOST', '127.0.0.1')}:{os.environ.get('REDIS_PORT', 6379)}/1",
         }
     }
 else:
