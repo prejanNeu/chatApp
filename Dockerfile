@@ -34,5 +34,5 @@ RUN chmod +x /app/entrypoint.sh
 EXPOSE 8000
 
 # Run entrypoint script with daphne command
-# Use shell form to allow PORT variable substitution
-CMD /app/entrypoint.sh daphne -b 0.0.0.0 -p ${PORT:-8000} config.asgi:application
+# Use shell to properly expand PORT variable
+CMD ["/bin/bash", "-c", "/app/entrypoint.sh daphne -b 0.0.0.0 -p ${PORT:-8000} config.asgi:application"]
