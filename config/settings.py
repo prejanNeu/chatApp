@@ -26,10 +26,28 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-8=7+^0d=)2te1xw(=fz)d
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
+# CACHES configuration (updated with optional password)
+if not DEBUG:
+    redis_url = f"redis://{os.environ.get('REDIS_HOST', '127.0.0.1')}:{os.environ.get('REDIS_PORT', 6379)}/1"
+    if REDIS_PASSWORD:
+        redis_url = f"redis://:{REDIS_PASSWORD}@{os.environ.get('REDIS_HOST', '127.0.0.1')}:{os.environ.get('REDIS_PORT', 6379)}/1"
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": redis_url,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
 
 # Application definition
 
@@ -48,11 +66,18 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+# CHANNEL_LAYERS configuration (updated with optional password)
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(os.environ.get('REDIS_HOST', '127.0.0.1'), int(os.environ.get('REDIS_PORT', 6379)))],
+            "hosts": [
+                (
+                    os.environ.get('REDIS_HOST', '127.0.0.1'),
+                    int(os.environ.get('REDIS_PORT', 6379)),
+                )
+            ],
+            "password": REDIS_PASSWORD, # Added password for Redis
         },
     },
 }
