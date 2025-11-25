@@ -5,7 +5,7 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "bash entrypoint.sh daphne -b 0.0.0.0 -p $PORT config.asgi:application",
+    "startCommand": "bash entrypoint.sh",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
