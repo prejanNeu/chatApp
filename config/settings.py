@@ -12,6 +12,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
+ROOT_URLCONF = "config.urls"
 
 # ==============================================================================
 # APPLICATIONS
