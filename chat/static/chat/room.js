@@ -312,7 +312,7 @@ chatMessageSubmit.onclick = function () {
         }
       })
       .catch((error) => {
-        console.error("Error:", error);
+        // console.error("Error:", error);
         fileNameDisplay.textContent = "❌ Upload failed";
         fileNameDisplay.style.color = "#ef4444";
         setTimeout(() => {
@@ -539,7 +539,7 @@ function fetchMessages() {
       isLoading = false;
     })
     .catch((error) => {
-      console.error("Error fetching messages:", error);
+      // console.error("Error fetching messages:", error);
       isLoading = false;
     });
 }
@@ -565,7 +565,7 @@ chatLog.addEventListener("scroll", () => {
 
 function handleMessageReceive(e) {
   const data = JSON.parse(e.data);
-  console.table(data);
+  // console.table(data);
 
   if (data.event === "user_join" || data.event === "user_leave") {
     // Initialize pending leaves tracker
@@ -979,7 +979,7 @@ function saveEdit(messageId) {
       }
     })
     .catch((error) => {
-      console.error("Error editing message:", error);
+      // console.error("Error editing message:", error);
       alert("Failed to edit message");
     });
 }
@@ -1028,7 +1028,7 @@ function deleteMessage(messageId) {
       }
     })
     .catch((error) => {
-      console.error("Error deleting message:", error);
+      // console.error("Error deleting message:", error);
       alert("Failed to delete message");
     });
 }

@@ -393,7 +393,7 @@ a:hover {
 }
 
 .online-dot.offline {
-    display: none;
+    background-color: #95a5a6;
 }
 
 .user-avatar-small {
@@ -785,12 +785,23 @@ a:hover {
     }
 
     .navbar-links {
-        display: none; /* Hide nav links on mobile for simplicity, or move to sidebar */
+        /* Keep nav links visible on mobile */
+        display: flex;
+        gap: 10px;
     }
     
-    /* If we want nav links in sidebar, we'd need to restructure. 
-       For now, let's keep it simple: Sidebar is for Chats/Friends navigation. 
-       Profile/Logout is in top right. */
+    .navbar-links .nav-link {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+    
+    .navbar-user .user-name {
+        display: none; /* Hide username on very small screens */
+    }
+    
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
 }
 
 /* Toast Notifications */

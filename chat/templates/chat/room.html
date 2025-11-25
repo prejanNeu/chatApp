@@ -128,7 +128,7 @@
     const my_id = JSON.parse(document.getElementById('user-id').textContent);
     const is_group = JSON.parse(document.getElementById('is-group').textContent);
   </script>
-  <script src="{% static 'chat/room.js' %}?{% now 'U' %}"></script>
+  <script src="{% static 'chat/room.js' %}"></script>
 
   {% if is_group %}
   <div id="membersModal" class="modal-overlay" style="display: none;">

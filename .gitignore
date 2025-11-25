@@ -3,3 +3,8 @@ pyrightconfig.json
 TODOS
 db.sqlite3
 media/*
+.venv/
+*.log
+*.md
+!README.md
+.env

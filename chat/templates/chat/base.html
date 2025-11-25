@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GuffGaff{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'chat/style.css' %}?{% now 'U' %}">
+    <link rel="stylesheet" href="{% static 'chat/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -62,7 +62,7 @@
         const current_username = "{{ request.user.username }}";
         const current_user_id = {{ request.user.id }};
     </script>
-    <script src="{% static 'chat/index.js' %}?{% now 'U' %}"></script>
+    <script src="{% static 'chat/index.js' %}"></script>
     {% include 'chat/modals/create_group.html' %}
     {% block scripts %}{% endblock %}
 </body>
