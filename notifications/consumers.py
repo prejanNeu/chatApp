@@ -1,5 +1,6 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from .utils import update_user_online_status
 
 
 class NotificationConsumer(AsyncWebsocketConsumer):
@@ -18,7 +19,14 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
+        # Update online status
+        await update_user_online_status(self.user, True)
+
     async def disconnect(self, close_code):
+        # Update online status
+        if self.user.is_authenticated:
+            await update_user_online_status(self.user, False)
+
         await self.channel_layer.group_discard(
             self.group_name,
             self.channel_name
